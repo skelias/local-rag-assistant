@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environment & Secrets
+.env
+.env.local
+*.pem
+*.key
+secrets/
+
+# Data (contains API keys, conversations, vectors)
+data/
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.next/
+frontend/.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Superpowers brainstorming temp files
+.superpowers/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Logs
+*.log
+logs/
+
+# Qdrant local storage
+qdrant_storage/
