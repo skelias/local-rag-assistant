@@ -1,0 +1,696 @@
+<style>
+  :root {
+    /* Glassmorphism Night Palette */
+    --bg-primary: #050510;
+    --bg-sidebar: rgba(12, 12, 40, 0.65);
+    --bg-glass: rgba(20, 20, 60, 0.45);
+    --bg-glass-strong: rgba(25, 25, 70, 0.55);
+    --border-glass: rgba(139, 92, 246, 0.18);
+    --border-glass-hover: rgba(139, 92, 246, 0.35);
+    --accent-violet: #a855f7;
+    --accent-blue: #60a5fa;
+    --accent-cyan: #22d3ee;
+    --accent-magenta: #e879f9;
+    --text-primary: #f0f0ff;
+    --text-secondary: #b8b8e0;
+    --text-tertiary: #8080b0;
+    --text-muted: #505080;
+    --glow-violet: rgba(168, 85, 247, 0.4);
+    --glow-cyan: rgba(34, 211, 238, 0.3);
+    --glow-blue: rgba(96, 165, 250, 0.35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Ambient background orbs */
+  .ambient-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 600px 400px at 15% 20%, rgba(124, 58, 237, 0.15), transparent 70%),
+      radial-gradient(ellipse 500px 350px at 85% 75%, rgba(6, 182, 212, 0.12), transparent 70%),
+      radial-gradient(ellipse 400px 300px at 50% 50%, rgba(59, 130, 246, 0.08), transparent 70%);
+  }
+
+  /* Glass Sidebar */
+  .sidebar {
+    width: 260px;
+    background: var(--bg-sidebar);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.3), inset -1px 0 0 rgba(255,255,255,0.03);
+  }
+
+  .sidebar-logo {
+    padding: 24px 18px 16px;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .sidebar-logo .accent {
+    background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 30px var(--glow-violet);
+  }
+  .sidebar-logo .dim { font-weight: 400; color: var(--text-tertiary); }
+
+  .sidebar-nav { padding: 8px 12px; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 3px;
+    font-weight: 450;
+    border: 1px solid transparent;
+  }
+  .nav-item:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.15);
+    color: var(--text-primary);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.08);
+  }
+  .nav-item.active {
+    background: rgba(139, 92, 246, 0.18);
+    border-color: rgba(139, 92, 246, 0.3);
+    color: #d8b4fe;
+    font-weight: 500;
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .nav-icon { font-size: 18px; width: 22px; text-align: center; line-height: 1; }
+
+  .sidebar-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-glass), transparent);
+    margin: 10px 16px;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+    color: var(--text-muted);
+    padding: 10px 16px 6px;
+    font-weight: 600;
+  }
+
+  .conv-list { padding: 0 12px 12px; }
+  .conv-item {
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.18s;
+    line-height: 1.4;
+    border: 1px solid transparent;
+  }
+  .conv-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.12);
+    color: var(--text-secondary);
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.06);
+  }
+
+  .sidebar-footer {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border-glass);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Main */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+    z-index: 5;
+  }
+
+  /* Glass Header */
+  .header {
+    padding: 14px 28px;
+    background: rgba(8, 8, 26, 0.6);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    border-bottom: 1px solid var(--border-glass);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .header-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+    text-shadow: 0 0 20px rgba(255,255,255,0.05);
+  }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn-glass {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 450;
+  }
+  .btn-glass:hover {
+    background: var(--bg-glass-strong);
+    border-color: var(--border-glass-hover);
+    color: var(--text-primary);
+    box-shadow: 0 0 20px var(--glow-violet);
+  }
+
+  /* Chat Area */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .message { display: flex; gap: 14px; max-width: 800px; }
+  .message.user { align-self: flex-end; flex-direction: row-reverse; }
+  .message.ai { align-self: flex-start; }
+
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 20px var(--glow-violet);
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+  .avatar.user { background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet)); }
+  .avatar.ai { background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan)); }
+
+  /* Glass Bubbles */
+  .bubble {
+    padding: 16px 20px;
+    border-radius: 18px;
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text-primary);
+    max-width: 700px;
+    position: relative;
+  }
+  .bubble.user {
+    background: rgba(30, 30, 90, 0.5);
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-bottom-right-radius: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .bubble.ai {
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    border: 1px solid var(--border-glass);
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 40px rgba(139, 92, 246, 0.05);
+  }
+
+  .bubble p { margin-bottom: 10px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble strong { color: #e0d0ff; font-weight: 600; }
+  .bubble code {
+    background: rgba(139, 92, 246, 0.2);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #d8b4fe;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    border: 1px solid rgba(139, 92, 246, 0.15);
+  }
+
+  .source-row { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .source-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--accent-cyan);
+    background: rgba(34, 211, 238, 0.08);
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid rgba(34, 211, 238, 0.15);
+    backdrop-filter: blur(8px);
+  }
+  .source-tag:hover {
+    background: rgba(34, 211, 238, 0.18);
+    border-color: rgba(34, 211, 238, 0.3);
+    box-shadow: 0 0 16px rgba(34, 211, 238, 0.1);
+  }
+
+  /* Glass Input */
+  .input-area {
+    padding: 18px 28px 22px;
+    background: rgba(8, 8, 26, 0.5);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    border-top: 1px solid var(--border-glass);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.2);
+  }
+  .input-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+    background: rgba(25, 25, 70, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    padding: 6px 6px 6px 20px;
+    transition: all 0.25s;
+    align-items: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .input-wrapper:focus-within {
+    border-color: var(--border-glass-hover);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 0 30px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .input-wrapper input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14.5px;
+    outline: none;
+    padding: 10px 0;
+    font-family: inherit;
+  }
+  .input-wrapper input::placeholder { color: var(--text-muted); }
+
+  .input-actions { display: flex; gap: 6px; align-items: center; }
+  .btn-icon-glass {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 10px;
+    transition: all 0.2s;
+    line-height: 1;
+  }
+  .btn-icon-glass:hover {
+    color: var(--text-secondary);
+    background: rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.1);
+  }
+
+  .btn-send-glass {
+    background: linear-gradient(135deg, var(--accent-violet), var(--accent-blue));
+    border: none;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px var(--glow-violet), 0 0 40px rgba(139, 92, 246, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-send-glass::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .btn-send-glass:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 28px var(--glow-violet), 0 0 50px rgba(139, 92, 246, 0.25);
+  }
+  .btn-send-glass:hover::before { opacity: 1; }
+  .btn-send-glass:active { transform: scale(0.97); }
+
+  .input-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.4); }
+
+  /* Glass Code Block */
+  .code-block-glass {
+    background: rgba(10, 10, 35, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    margin: 12px 0;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .code-header-glass {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-glass);
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+  .code-body-glass {
+    padding: 14px 18px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #d4d4f0;
+    overflow-x: auto;
+  }
+
+  /* Glass Cards for other views */
+  .glass-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    border: 1px solid var(--border-glass);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: all 0.2s;
+  }
+  .glass-card:hover {
+    border-color: var(--border-glass-hover);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 0 30px rgba(139, 92, 246, 0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  .glass-dropzone {
+    background: rgba(20, 20, 60, 0.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 2px dashed var(--border-glass);
+    border-radius: 16px;
+    transition: all 0.25s;
+  }
+  .glass-dropzone:hover {
+    border-color: var(--border-glass-hover);
+    background: rgba(20, 20, 60, 0.45);
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.1);
+  }
+
+  .glass-stat {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+</style>
+
+<h2>Glassmorphism 夜间主题 — 设计预览</h2>
+<p class="subtitle">毛玻璃 · 背景光晕 · 半透明层级 · 发光边框</p>
+
+<!-- Ambient background is in CSS, applied to body -->
+
+<div class="mockup">
+  <div class="mockup-header">主界面 — 对话视图 (Glassmorphism)</div>
+  <div class="mockup-body" style="background:var(--bg-primary); padding:0; overflow:hidden; position:relative;">
+
+    <!-- Ambient glows -->
+    <div style="position:absolute; inset:0; pointer-events:none; z-index:0;">
+      <div style="position:absolute; width:400px; height:400px; background:radial-gradient(circle, rgba(124,58,237,0.12), transparent 70%); top:-100px; left:-100px;"></div>
+      <div style="position:absolute; width:350px; height:350px; background:radial-gradient(circle, rgba(6,182,212,0.1), transparent 70%); bottom:-50px; right:-50px;"></div>
+    </div>
+
+    <div style="display:flex; height:680px; background:transparent; position:relative; z-index:1;">
+
+      <!-- Glass Sidebar -->
+      <div style="width:260px; background:rgba(12,12,40,0.65); backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4); border-right:1px solid rgba(139,92,246,0.18); display:flex; flex-direction:column; flex-shrink:0; box-shadow:4px 0 24px rgba(0,0,0,0.3), inset -1px 0 0 rgba(255,255,255,0.03);">
+        <div style="padding:24px 18px 16px; font-size:19px; font-weight:700;">
+          <span style="background:linear-gradient(135deg, #a855f7, #22d3ee); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 30px rgba(168,85,247,0.4);">RAG AI</span>
+          <span style="font-weight:400; color:#8080b0;">助手</span>
+        </div>
+
+        <div style="padding:8px 12px;">
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#d8b4fe; font-size:14px; font-weight:500; background:rgba(139,92,246,0.18); border:1px solid rgba(139,92,246,0.3); box-shadow:0 0 24px rgba(139,92,246,0.15), inset 0 1px 0 rgba(255,255,255,0.05);">
+            <span>💬</span> 对话
+          </div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#b8b8e0; font-size:14px; cursor:pointer; border:1px solid transparent; transition:all 0.2s;">
+            <span>📚</span> 知识库
+          </div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#b8b8e0; font-size:14px; cursor:pointer; border:1px solid transparent;">
+            <span>🤖</span> Agent
+          </div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#b8b8e0; font-size:14px; cursor:pointer; border:1px solid transparent;">
+            <span>⚙</span> 设置
+          </div>
+        </div>
+
+        <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(139,92,246,0.18), transparent); margin:10px 16px;"></div>
+        <div style="font-size:10px; text-transform:uppercase; letter-spacing:1.3px; color:#505080; padding:10px 16px 6px; font-weight:600;">历史对话</div>
+        <div style="padding:0 12px 12px;">
+          <div style="padding:9px 14px; border-radius:10px; font-size:13px; color:#8080b0; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.12); box-shadow:0 0 16px rgba(59,130,246,0.06);">JWT 认证实现方案</div>
+          <div style="padding:9px 14px; border-radius:10px; font-size:13px; color:#8080b0; border:1px solid transparent;">Python 代码规范整理</div>
+          <div style="padding:9px 14px; border-radius:10px; font-size:13px; color:#8080b0; border:1px solid transparent;">API 设计最佳实践</div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+        <!-- Glass Header -->
+        <div style="padding:14px 28px; background:rgba(8,8,26,0.6); backdrop-filter:blur(16px) saturate(1.2); -webkit-backdrop-filter:blur(16px) saturate(1.2); border-bottom:1px solid rgba(139,92,246,0.18); display:flex; align-items:center; justify-content:space-between; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+          <div style="font-size:15px; font-weight:500; color:#f0f0ff; text-shadow:0 0 20px rgba(255,255,255,0.05);">JWT 认证实现方案</div>
+          <div style="display:flex; gap:10px;">
+            <button style="background:rgba(20,20,60,0.45); backdrop-filter:blur(12px); border:1px solid rgba(139,92,246,0.18); color:#b8b8e0; padding:8px 18px; border-radius:10px; font-size:13px; cursor:pointer;">+ 新对话</button>
+          </div>
+        </div>
+
+        <!-- Messages with Glass Bubbles -->
+        <div style="flex:1; overflow-y:auto; padding:32px 28px; display:flex; flex-direction:column; gap:24px;">
+
+          <!-- User -->
+          <div style="display:flex; gap:14px; max-width:720px; align-self:flex-end; flex-direction:row-reverse;">
+            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#60a5fa,#a855f7); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 4px 16px rgba(0,0,0,0.4), 0 0 20px rgba(168,85,247,0.4); border:2px solid rgba(255,255,255,0.1);">👤</div>
+            <div style="padding:16px 20px; border-radius:18px 18px 6px 18px; font-size:14.5px; line-height:1.75; background:rgba(30,30,90,0.5); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border:1px solid rgba(59,130,246,0.25); color:#f0f0ff; box-shadow:0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);">
+              知识库里关于 JWT 认证的最佳实践是什么？
+            </div>
+          </div>
+
+          <!-- AI with sources -->
+          <div style="display:flex; gap:14px; max-width:720px; align-self:flex-start;">
+            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#a855f7,#22d3ee); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 4px 16px rgba(0,0,0,0.4), 0 0 20px rgba(168,85,247,0.4); border:2px solid rgba(255,255,255,0.1);">✨</div>
+            <div style="padding:16px 20px; border-radius:6px 18px 18px 18px; font-size:14.5px; line-height:1.75; background:rgba(20,20,60,0.45); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border:1px solid rgba(139,92,246,0.18); color:#f0f0ff; box-shadow:0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 40px rgba(139,92,246,0.05); max-width:640px;">
+              <p>根据知识库中的文档，JWT 认证的核心要点：</p>
+              <p>1. <strong style="color:#e0d0ff;">密钥管理</strong> — 使用 RS256 非对称加密，私钥签名、公钥验签</p>
+              <p>2. <strong style="color:#e0d0ff;">Token 有效期</strong> — Access Token 15 分钟，Refresh Token 7 天</p>
+              <p>3. <strong style="color:#e0d0ff;">存储位置</strong> — Access Token 存内存，Refresh Token 存 httpOnly Cookie</p>
+              <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#22d3ee;background:rgba(34,211,238,0.08);padding:5px 12px;border-radius:20px;border:1px solid rgba(34,211,238,0.15); backdrop-filter:blur(8px);">📎 auth_guide.md §3.2</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#22d3ee;background:rgba(34,211,238,0.08);padding:5px 12px;border-radius:20px;border:1px solid rgba(34,211,238,0.15); backdrop-filter:blur(8px);">📎 jwt_best_practices.pdf</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI with code block -->
+          <div style="display:flex; gap:14px; max-width:720px; align-self:flex-start;">
+            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#a855f7,#22d3ee); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 4px 16px rgba(0,0,0,0.4), 0 0 20px rgba(168,85,247,0.4); border:2px solid rgba(255,255,255,0.1);">✨</div>
+            <div style="padding:16px 20px; border-radius:6px 18px 18px 18px; font-size:14.5px; line-height:1.75; background:rgba(20,20,60,0.45); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border:1px solid rgba(139,92,246,0.18); color:#f0f0ff; box-shadow:0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 40px rgba(139,92,246,0.05); max-width:640px;">
+              <p>是的，refresh token 需要<strong style="color:#e0d0ff;">持久化存储</strong>。推荐方案：</p>
+              <div style="background:rgba(10,10,35,0.6); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid rgba(139,92,246,0.18); border-radius:12px; margin:12px 0; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; background:rgba(255,255,255,0.03); border-bottom:1px solid rgba(139,92,246,0.18); font-size:12px; color:#8080b0;">
+                  <span>python</span><span style="cursor:pointer;">📋</span>
+                </div>
+                <div style="padding:14px 18px; font-family:monospace; font-size:13px; line-height:1.7; color:#d4d4f0;">
+                  <span style="color:#c792ea;">async def</span> <span style="color:#82aaff;">rotate_refresh_token</span>(<span style="color:#f78c6c;">user_id</span>: <span style="color:#c792ea;">str</span>) -> <span style="color:#c792ea;">str</span>:<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#676e95; font-style:italic;"># 生成新 token，作废旧 token</span><br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;new_token = <span style="color:#82aaff;">secrets</span>.<span style="color:#82aaff;">token_urlsafe</span>(<span style="color:#f78c6c;">32</span>)<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c792ea;">await</span> db.<span style="color:#82aaff;">execute</span>(<span style="color:#c3e88d;">"UPDATE refresh_tokens SET revoked=1 WHERE user_id=?" </span>,<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(user_id,))<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c792ea;">return</span> new_token
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Glass Input -->
+        <div style="padding:18px 28px 22px; background:rgba(8,8,26,0.5); backdrop-filter:blur(20px) saturate(1.2); -webkit-backdrop-filter:blur(20px) saturate(1.2); border-top:1px solid rgba(139,92,246,0.18); box-shadow:0 -4px 24px rgba(0,0,0,0.2);">
+          <div style="max-width:800px; margin:0 auto; display:flex; gap:10px; background:rgba(25,25,70,0.4); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(139,92,246,0.18); border-radius:16px; padding:6px 6px 6px 20px; align-items:center; box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);">
+            <input type="text" placeholder="输入你的问题…" style="flex:1; background:none; border:none; color:#f0f0ff; font-size:14.5px; outline:none; padding:10px 0; font-family:inherit;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button style="background:none; border:none; color:#505080; font-size:18px; cursor:pointer; padding:8px; border-radius:10px;">📎</button>
+              <button style="background:none; border:none; color:#505080; font-size:18px; cursor:pointer; padding:8px; border-radius:10px;">🔍</button>
+              <button style="background:linear-gradient(135deg,#a855f7,#60a5fa); border:none; color:white; padding:10px 24px; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; box-shadow:0 4px 20px rgba(168,85,247,0.4), 0 0 40px rgba(168,85,247,0.2);">发送</button>
+            </div>
+          </div>
+          <div style="text-align:center; font-size:12px; color:#505080; margin-top:10px; letter-spacing:0.3px;">基于知识库内容回答 · 支持 Markdown 和代码高亮</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Knowledge Base Glass View -->
+<div class="mockup" style="margin-top:24px;">
+  <div class="mockup-header">知识库管理 — 毛玻璃风格</div>
+  <div class="mockup-body" style="background:var(--bg-primary); padding:0; overflow:hidden;">
+    <div style="display:flex; height:400px; background:transparent;">
+      <div style="width:260px; background:rgba(12,12,40,0.65); backdrop-filter:blur(20px) saturate(1.4); border-right:1px solid rgba(139,92,246,0.18); display:flex; flex-direction:column; flex-shrink:0;">
+        <div style="padding:24px 18px 16px; font-size:19px; font-weight:700;">
+          <span style="background:linear-gradient(135deg, #a855f7, #22d3ee); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">RAG AI</span>
+          <span style="font-weight:400; color:#8080b0;">助手</span>
+        </div>
+        <div style="padding:8px 12px;">
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#b8b8e0; font-size:14px;"><span>💬</span> 对话</div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#d8b4fe; font-weight:500; background:rgba(139,92,246,0.18); border:1px solid rgba(139,92,246,0.3);"><span>📚</span> 知识库</div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#b8b8e0; font-size:14px;"><span>🤖</span> Agent</div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#b8b8e0; font-size:14px;"><span>⚙</span> 设置</div>
+        </div>
+      </div>
+      <div style="flex:1; padding:32px; min-width:0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+          <div style="font-size:18px; font-weight:600;">知识库</div>
+          <button style="background:linear-gradient(135deg,#a855f7,#60a5fa); border:none; color:white; padding:10px 22px; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; box-shadow:0 4px 20px rgba(168,85,247,0.4);">+ 上传文档</button>
+        </div>
+
+        <div style="background:rgba(20,20,60,0.3); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:2px dashed rgba(139,92,246,0.25); border-radius:16px; padding:36px; text-align:center; margin-bottom:28px; transition:all 0.25s;">
+          <div style="font-size:36px; margin-bottom:10px;">📁</div>
+          <div style="font-size:14px; color:#b8b8e0; margin-bottom:4px;">拖拽文件到此处，或点击上传</div>
+          <div style="font-size:12px; color:#505080;">支持 PDF · MD · TXT · DOCX · 代码文件</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:rgba(20,20,60,0.45); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(139,92,246,0.18); border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04);">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span>📄</span><span style="font-size:14px;">auth_guide.md</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px;">
+              <span style="font-size:12px; color:#22c55e;">● 已索引</span>
+              <span style="font-size:12px; color:#505080;">07-22</span>
+              <span style="font-size:12px; color:#505080; cursor:pointer;">🗑</span>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:rgba(20,20,60,0.45); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(139,92,246,0.18); border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04);">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span>📄</span><span style="font-size:14px;">jwt_best_practices.pdf</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px;">
+              <span style="font-size:12px; color:#22c55e;">● 已索引</span>
+              <span style="font-size:12px; color:#505080;">07-21</span>
+              <span style="font-size:12px; color:#505080; cursor:pointer;">🗑</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Glass View -->
+<div class="mockup" style="margin-top:24px; margin-bottom:40px;">
+  <div class="mockup-header">设置页面 — 毛玻璃风格</div>
+  <div class="mockup-body" style="background:var(--bg-primary); padding:0; overflow:hidden;">
+    <div style="display:flex; height:420px; background:transparent;">
+      <div style="width:260px; background:rgba(12,12,40,0.65); backdrop-filter:blur(20px) saturate(1.4); border-right:1px solid rgba(139,92,246,0.18); display:flex; flex-direction:column; flex-shrink:0;">
+        <div style="padding:24px 18px 16px; font-size:19px; font-weight:700;">
+          <span style="background:linear-gradient(135deg, #a855f7, #22d3ee); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">RAG AI</span>
+          <span style="font-weight:400; color:#8080b0;">助手</span>
+        </div>
+        <div style="padding:8px 12px;">
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#b8b8e0; font-size:14px;"><span>💬</span> 对话</div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#b8b8e0; font-size:14px;"><span>📚</span> 知识库</div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#b8b8e0; font-size:14px;"><span>🤖</span> Agent</div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:12px; color:#d8b4fe; font-weight:500; background:rgba(139,92,246,0.18); border:1px solid rgba(139,92,246,0.3);"><span>⚙</span> 设置</div>
+        </div>
+      </div>
+      <div style="flex:1; padding:32px; min-width:0; overflow-y:auto;">
+        <div style="font-size:18px; font-weight:600; margin-bottom:28px;">⚙ 设置</div>
+
+        <div style="margin-bottom:32px;">
+          <div style="font-size:13px; font-weight:500; color:#8080b0; margin-bottom:14px; text-transform:uppercase; letter-spacing:0.8px;">模型配置</div>
+          <div style="display:flex; flex-direction:column; gap:12px; max-width:500px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:rgba(20,20,60,0.45); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(139,92,246,0.18); border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04);">
+              <span style="font-size:14px;">Claude API Key</span>
+              <input type="password" value="sk-ant-xxxxxxxxxxxx" style="background:rgba(25,25,70,0.5); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:8px 12px; color:#f0f0ff; font-size:13px; width:240px; outline:none; backdrop-filter:blur(8px);">
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:rgba(20,20,60,0.45); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(139,92,246,0.18); border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04);">
+              <span style="font-size:14px;">默认对话模型</span>
+              <select style="background:rgba(25,25,70,0.5); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:8px 12px; color:#f0f0ff; font-size:13px; outline:none; backdrop-filter:blur(8px);">
+                <option>Claude Opus 4.8</option>
+                <option>Claude Sonnet 4.6</option>
+                <option>DeepSeek Chat</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:13px; font-weight:500; color:#8080b0; margin-bottom:14px; text-transform:uppercase; letter-spacing:0.8px;">💰 消费概览</div>
+          <div style="display:flex; gap:16px;">
+            <div style="padding:18px 24px; background:rgba(20,20,60,0.45); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(139,92,246,0.18); border-radius:12px; min-width:140px; box-shadow:0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04);">
+              <div style="font-size:12px; color:#505080; margin-bottom:6px;">本月消费</div>
+              <div style="font-size:24px; font-weight:700; color:#f0f0ff; text-shadow:0 0 20px rgba(168,85,247,0.3);">$3.24</div>
+            </div>
+            <div style="padding:18px 24px; background:rgba(20,20,60,0.45); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(139,92,246,0.18); border-radius:12px; min-width:140px; box-shadow:0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04);">
+              <div style="font-size:12px; color:#505080; margin-bottom:6px;">上月消费</div>
+              <div style="font-size:24px; font-weight:700; color:#f0f0ff;">$5.10</div>
+            </div>
+            <div style="padding:18px 24px; background:rgba(20,20,60,0.45); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(139,92,246,0.18); border-radius:12px; min-width:140px; box-shadow:0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04);">
+              <div style="font-size:12px; color:#505080; margin-bottom:6px;">总计</div>
+              <div style="font-size:24px; font-weight:700; color:#f0f0ff;">$12.87</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

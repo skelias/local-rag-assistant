@@ -1,0 +1,690 @@
+<style>
+  :root {
+    /* LiquidRAG Lagoon Palette */
+    --obsidian: #0A0A0F;
+    --obsidian-light: #0F0F16;
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-hover: rgba(255, 255, 255, 0.14);
+    --aurora-cyan: rgba(0, 240, 255, 0.10);
+    --aurora-violet: rgba(189, 0, 255, 0.06);
+    --aurora-magenta: rgba(255, 0, 128, 0.05);
+    --slate-cool: rgba(140, 160, 200, 0.08);
+    --slate-warm: rgba(160, 140, 200, 0.05);
+    --text-primary: #f0f0f8;
+    --text-secondary: #a0a0c0;
+    --text-tertiary: #6868a0;
+    --text-muted: #404068;
+    --glow-cyan: rgba(0, 240, 255, 0.35);
+    --glow-violet: rgba(189, 0, 255, 0.30);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--obsidian);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Caustic background simulation */
+  .caustic-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 800px 500px at 20% 30%, rgba(0, 240, 255, 0.06), transparent 70%),
+      radial-gradient(ellipse 600px 400px at 80% 70%, rgba(189, 0, 255, 0.05), transparent 70%),
+      radial-gradient(ellipse 500px 300px at 50% 50%, rgba(100, 100, 255, 0.03), transparent 70%),
+      radial-gradient(ellipse 400px 400px at 70% 20%, rgba(0, 240, 255, 0.04), transparent 70%);
+    animation: causticShift 20s ease-in-out infinite alternate;
+  }
+  @keyframes causticShift {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 15px) scale(0.98); }
+    100% { transform: translate(10px, 10px) scale(1.02); opacity: 0.85; }
+  }
+
+  /* Glass Sidebar */
+  .sidebar {
+    width: 260px;
+    background: rgba(15, 15, 25, 0.60);
+    backdrop-filter: blur(32px) saturate(1.3);
+    -webkit-backdrop-filter: blur(32px) saturate(1.3);
+    border-right: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    padding: 26px 20px 18px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .sidebar-logo .accent {
+    background: linear-gradient(135deg, #00F0FF, #BD00FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
+  }
+  .sidebar-logo .dim { font-weight: 400; color: var(--text-tertiary); }
+
+  .sidebar-nav { padding: 8px 12px; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    margin-bottom: 3px;
+    font-weight: 450;
+    border: 1px solid transparent;
+    position: relative;
+  }
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+  }
+  .nav-item.active {
+    background: rgba(0, 240, 255, 0.08);
+    border-color: rgba(0, 240, 255, 0.18);
+    color: #a5f3fc;
+    font-weight: 500;
+    box-shadow: 0 0 24px rgba(0, 240, 255, 0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .nav-icon { font-size: 18px; width: 22px; text-align: center; line-height: 1; }
+
+  .sidebar-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+    margin: 10px 16px;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+    color: var(--text-muted);
+    padding: 10px 16px 6px;
+    font-weight: 600;
+  }
+
+  .conv-list { padding: 0 12px 12px; }
+  .conv-item {
+    padding: 9px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.2s;
+    line-height: 1.4;
+    border: 1px solid transparent;
+  }
+  .conv-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+  }
+
+  .sidebar-footer {
+    padding: 14px 18px;
+    border-top: 1px solid var(--glass-border);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Main */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+    z-index: 5;
+  }
+
+  /* Glass Header */
+  .header {
+    padding: 14px 28px;
+    background: rgba(10, 10, 15, 0.50);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+  }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn-glass {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 8px 18px;
+    border-radius: 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-weight: 450;
+  }
+  .btn-glass:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--glass-border-hover);
+    color: var(--text-primary);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.08);
+  }
+
+  /* Chat Area */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .message { display: flex; gap: 14px; max-width: 820px; }
+  .message.user { align-self: flex-end; flex-direction: row-reverse; }
+  .message.ai { align-self: flex-start; }
+
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    border: 1.5px solid rgba(255,255,255,0.1);
+  }
+  .avatar.user { background: linear-gradient(135deg, #00F0FF, #BD00FF); }
+  .avatar.ai { background: linear-gradient(135deg, #BD00FF, #00F0FF); }
+
+  /* === LIQUID GLASS BUBBLE — 3 LAYER STACK === */
+  .bubble {
+    padding: 18px 22px;
+    border-radius: 24px;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text-primary);
+    max-width: 720px;
+    position: relative;
+    border: 1px solid var(--glass-border);
+    overflow: hidden;
+  }
+
+  /* Layer 1: Luminance (pseudo-element for brightness lift) */
+  .bubble::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    backdrop-filter: blur(24px) brightness(1.25);
+    -webkit-backdrop-filter: blur(24px) brightness(1.25);
+    z-index: -2;
+  }
+
+  /* Layer 2: Chromatic blur (main surface) */
+  .bubble.user {
+    background: linear-gradient(135deg, var(--aurora-cyan), var(--aurora-violet));
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border-bottom-right-radius: 6px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3), 0 0 60px rgba(0, 240, 255, 0.06);
+  }
+  .bubble.ai {
+    background: linear-gradient(135deg, var(--slate-cool), var(--slate-warm));
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3), 0 0 60px rgba(189, 0, 255, 0.04);
+  }
+
+  /* Layer 3: Noise texture overlay (simulated with subtle gradient) */
+  .bubble::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0.03;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255,255,255,0.1) 2px,
+      rgba(255,255,255,0.1) 4px
+    );
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .bubble p { margin-bottom: 10px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble strong { color: #e8e0ff; font-weight: 600; }
+  .bubble code {
+    background: rgba(0, 240, 255, 0.12);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    color: #a5f3fc;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    border: 1px solid rgba(0, 240, 255, 0.15);
+  }
+
+  /* Source tags */
+  .source-row { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .source-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #67e8f9;
+    background: rgba(0, 240, 255, 0.06);
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.25s;
+    border: 1px solid rgba(0, 240, 255, 0.12);
+    backdrop-filter: blur(8px);
+  }
+  .source-tag:hover {
+    background: rgba(0, 240, 255, 0.14);
+    border-color: rgba(0, 240, 255, 0.25);
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.1);
+  }
+
+  /* === LIQUID EDGE INPUT BAR === */
+  .input-area {
+    padding: 20px 32px 24px;
+    background: rgba(10, 10, 15, 0.45);
+    backdrop-filter: blur(32px) saturate(1.2);
+    -webkit-backdrop-filter: blur(32px) saturate(1.2);
+    border-top: 1px solid var(--glass-border);
+    position: relative;
+  }
+
+  .input-wrapper {
+    max-width: 820px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 6px 6px 6px 24px;
+    transition: all 0.3s;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Liquid edge: conic gradient border animation on focus */
+  .input-wrapper:focus-within {
+    border-color: transparent;
+    box-shadow: 0 0 0 1px rgba(0, 240, 255, 0.3), 0 0 40px rgba(0, 240, 255, 0.08);
+  }
+  .input-wrapper:focus-within::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 29px;
+    padding: 1px;
+    background: conic-gradient(from 0deg, transparent, #00F0FF, #BD00FF, transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: liquidRotate 3s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes liquidRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .input-wrapper input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 15px;
+    outline: none;
+    padding: 10px 0;
+    font-family: inherit;
+  }
+  .input-wrapper input::placeholder { color: var(--text-muted); }
+
+  .input-actions { display: flex; gap: 6px; align-items: center; }
+  .btn-icon-glass {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 12px;
+    transition: all 0.2s;
+    line-height: 1;
+  }
+  .btn-icon-glass:hover {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Pill-shaped glass send button with inner glow */
+  .btn-send-liquid {
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.9), rgba(189, 0, 255, 0.9));
+    border: none;
+    color: white;
+    padding: 11px 28px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    white-space: nowrap;
+    box-shadow: 0 4px 24px rgba(0, 240, 255, 0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-send-liquid::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.3), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .btn-send-liquid:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 240, 255, 0.35), 0 0 60px rgba(189, 0, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .btn-send-liquid:hover::before { opacity: 1; }
+  .btn-send-liquid:active { transform: scale(0.96); }
+
+  .input-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Liquid scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    backdrop-filter: blur(4px);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.3); }
+
+  /* Code block with liquid glass */
+  .code-liquid {
+    background: rgba(8, 8, 14, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    margin: 14px 0;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .code-header-liquid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 18px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--glass-border);
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+  .code-body-liquid {
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #d0d0e8;
+    overflow-x: auto;
+  }
+
+  /* Glass stat cards */
+  .glass-stat-liquid {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+    transition: all 0.25s;
+  }
+  .glass-stat-liquid:hover {
+    border-color: var(--glass-border-hover);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25), 0 0 30px rgba(0, 240, 255, 0.06), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+</style>
+
+<h2>LiquidRAG 风格 — 黑暗泻湖主题</h2>
+<p class="subtitle">3 层液态玻璃气泡 · 焦散背景 · Liquid Edge 输入栏 · 极光渐变</p>
+
+<div class="mockup">
+  <div class="mockup-header">主界面 — 对话视图 (Liquid Glass)</div>
+  <div class="mockup-body" style="background:#0A0A0F; padding:0; overflow:hidden; position:relative;">
+
+    <!-- Caustic background -->
+    <div style="position:absolute; inset:0; pointer-events:none; z-index:0;">
+      <div style="position:absolute; width:600px; height:400px; background:radial-gradient(ellipse, rgba(0,240,255,0.07), transparent 70%); top:10%; left:5%; animation:causticShift 20s ease-in-out infinite alternate;"></div>
+      <div style="position:absolute; width:500px; height:350px; background:radial-gradient(ellipse, rgba(189,0,255,0.05), transparent 70%); bottom:15%; right:10%; animation:causticShift 25s ease-in-out infinite alternate-reverse;"></div>
+      <div style="position:absolute; width:400px; height:300px; background:radial-gradient(ellipse, rgba(100,100,255,0.04), transparent 70%); top:40%; left:40%; animation:causticShift 18s ease-in-out infinite alternate;"></div>
+    </div>
+
+    <div style="display:flex; height:720px; background:transparent; position:relative; z-index:1;">
+
+      <!-- Sidebar -->
+      <div style="width:260px; background:rgba(15,15,25,0.60); backdrop-filter:blur(32px) saturate(1.3); -webkit-backdrop-filter:blur(32px) saturate(1.3); border-right:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; flex-shrink:0;">
+        <div style="padding:26px 20px 18px; font-size:20px; font-weight:700;">
+          <span style="background:linear-gradient(135deg, #00F0FF, #BD00FF); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 40px rgba(0,240,255,0.3);">RAG AI</span>
+          <span style="font-weight:400; color:#6868a0;">助手</span>
+        </div>
+
+        <div style="padding:8px 12px;">
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:16px; color:#a5f3fc; font-size:14px; font-weight:500; background:rgba(0,240,255,0.08); border:1px solid rgba(0,240,255,0.18); box-shadow:0 0 24px rgba(0,240,255,0.08), inset 0 1px 0 rgba(255,255,255,0.06);">
+            <span>💬</span> 对话
+          </div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:16px; color:#a0a0c0; font-size:14px; cursor:pointer; border:1px solid transparent; transition:all 0.25s;">
+            <span>📚</span> 知识库
+          </div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:16px; color:#a0a0c0; font-size:14px; cursor:pointer; border:1px solid transparent;">
+            <span>🤖</span> Agent
+          </div>
+          <div style="display:flex;align-items:center;gap:12px; padding:11px 14px; border-radius:16px; color:#a0a0c0; font-size:14px; cursor:pointer; border:1px solid transparent;">
+            <span>⚙</span> 设置
+          </div>
+        </div>
+
+        <div style="height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); margin:10px 16px;"></div>
+        <div style="font-size:10px; text-transform:uppercase; letter-spacing:1.3px; color:#404068; padding:10px 16px 6px; font-weight:600;">历史对话</div>
+        <div style="padding:0 12px 12px;">
+          <div style="padding:9px 14px; border-radius:12px; font-size:13px; color:#6868a0; background:rgba(0,240,255,0.04); border:1px solid rgba(0,240,255,0.08);">JWT 认证实现方案</div>
+          <div style="padding:9px 14px; border-radius:12px; font-size:13px; color:#6868a0; border:1px solid transparent;">Python 代码规范整理</div>
+          <div style="padding:9px 14px; border-radius:12px; font-size:13px; color:#6868a0; border:1px solid transparent;">API 设计最佳实践</div>
+        </div>
+      </div>
+
+      <!-- Main -->
+      <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+        <!-- Header -->
+        <div style="padding:14px 28px; background:rgba(10,10,15,0.50); backdrop-filter:blur(24px) saturate(1.2); -webkit-backdrop-filter:blur(24px) saturate(1.2); border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-size:15px; font-weight:500; color:#f0f0f8;">JWT 认证实现方案</div>
+          <div style="display:flex; gap:10px;">
+            <button style="background:rgba(255,255,255,0.04); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); color:#a0a0c0; padding:8px 18px; border-radius:14px; font-size:13px; cursor:pointer;">+ 新对话</button>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div style="flex:1; overflow-y:auto; padding:36px 32px; display:flex; flex-direction:column; gap:28px;">
+
+          <!-- User message -->
+          <div style="display:flex; gap:14px; max-width:740px; align-self:flex-end; flex-direction:row-reverse;">
+            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#00F0FF,#BD00FF); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 4px 16px rgba(0,0,0,0.4); border:1.5px solid rgba(255,255,255,0.1);">👤</div>
+            <div style="padding:18px 22px; border-radius:24px 24px 6px 24px; font-size:15px; line-height:1.75; background:linear-gradient(135deg, rgba(0,240,255,0.10), rgba(189,0,255,0.06)); backdrop-filter:blur(24px) saturate(140%); -webkit-backdrop-filter:blur(24px) saturate(140%); border:1px solid rgba(255,255,255,0.08); color:#f0f0f8; box-shadow:0 8px 40px rgba(0,0,0,0.3), 0 0 60px rgba(0,240,255,0.06); position:relative; overflow:hidden;">
+              <div style="position:absolute; inset:0; border-radius:inherit; backdrop-filter:blur(24px) brightness(1.25); -webkit-backdrop-filter:blur(24px) brightness(1.25); z-index:-2;"></div>
+              <div style="position:absolute; inset:0; border-radius:inherit; opacity:0.03; background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px); pointer-events:none; z-index:-1;"></div>
+              知识库里关于 JWT 认证的最佳实践是什么？
+            </div>
+          </div>
+
+          <!-- AI message with sources -->
+          <div style="display:flex; gap:14px; max-width:740px; align-self:flex-start;">
+            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#BD00FF,#00F0FF); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 4px 16px rgba(0,0,0,0.4); border:1.5px solid rgba(255,255,255,0.1);">✨</div>
+            <div style="padding:18px 22px; border-radius:6px 24px 24px 24px; font-size:15px; line-height:1.75; background:linear-gradient(135deg, rgba(140,160,200,0.08), rgba(160,140,200,0.05)); backdrop-filter:blur(24px) saturate(140%); -webkit-backdrop-filter:blur(24px) saturate(140%); border:1px solid rgba(255,255,255,0.08); color:#f0f0f8; box-shadow:0 8px 40px rgba(0,0,0,0.3), 0 0 60px rgba(189,0,255,0.04); position:relative; overflow:hidden; max-width:660px;">
+              <div style="position:absolute; inset:0; border-radius:inherit; backdrop-filter:blur(24px) brightness(1.25); -webkit-backdrop-filter:blur(24px) brightness(1.25); z-index:-2;"></div>
+              <div style="position:absolute; inset:0; border-radius:inherit; opacity:0.03; background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px); pointer-events:none; z-index:-1;"></div>
+              <p>根据知识库中的文档，JWT 认证的核心要点：</p>
+              <p>1. <strong style="color:#e8e0ff;">密钥管理</strong> — 使用 RS256 非对称加密，私钥签名、公钥验签</p>
+              <p>2. <strong style="color:#e8e0ff;">Token 有效期</strong> — Access Token 15 分钟，Refresh Token 7 天</p>
+              <p>3. <strong style="color:#e8e0ff;">存储位置</strong> — Access Token 存内存，Refresh Token 存 httpOnly Cookie</p>
+              <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#67e8f9;background:rgba(0,240,255,0.06);padding:5px 12px;border-radius:20px;border:1px solid rgba(0,240,255,0.12); backdrop-filter:blur(8px);">📎 auth_guide.md §3.2</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#67e8f9;background:rgba(0,240,255,0.06);padding:5px 12px;border-radius:20px;border:1px solid rgba(0,240,255,0.12); backdrop-filter:blur(8px);">📎 jwt_best_practices.pdf</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI message with code -->
+          <div style="display:flex; gap:14px; max-width:740px; align-self:flex-start;">
+            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#BD00FF,#00F0FF); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 4px 16px rgba(0,0,0,0.4); border:1.5px solid rgba(255,255,255,0.1);">✨</div>
+            <div style="padding:18px 22px; border-radius:6px 24px 24px 24px; font-size:15px; line-height:1.75; background:linear-gradient(135deg, rgba(140,160,200,0.08), rgba(160,140,200,0.05)); backdrop-filter:blur(24px) saturate(140%); -webkit-backdrop-filter:blur(24px) saturate(140%); border:1px solid rgba(255,255,255,0.08); color:#f0f0f8; box-shadow:0 8px 40px rgba(0,0,0,0.3), 0 0 60px rgba(189,0,255,0.04); position:relative; overflow:hidden; max-width:660px;">
+              <div style="position:absolute; inset:0; border-radius:inherit; backdrop-filter:blur(24px) brightness(1.25); -webkit-backdrop-filter:blur(24px) brightness(1.25); z-index:-2;"></div>
+              <div style="position:absolute; inset:0; border-radius:inherit; opacity:0.03; background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px); pointer-events:none; z-index:-1;"></div>
+              <p>是的，refresh token 需要<strong style="color:#e8e0ff;">持久化存储</strong>。推荐方案：</p>
+              <div style="background:rgba(8,8,14,0.65); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; margin:14px 0; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 18px; background:rgba(255,255,255,0.02); border-bottom:1px solid rgba(255,255,255,0.08); font-size:12px; color:#6868a0;">
+                  <span>python</span><span style="cursor:pointer;">📋</span>
+                </div>
+                <div style="padding:16px 20px; font-family:monospace; font-size:13.5px; line-height:1.7; color:#d0d0e8;">
+                  <span style="color:#c792ea;">async def</span> <span style="color:#82aaff;">rotate_refresh_token</span>(<span style="color:#f78c6c;">user_id</span>: <span style="color:#c792ea;">str</span>) -> <span style="color:#c792ea;">str</span>:<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#676e95; font-style:italic;"># 生成新 token，作废旧 token</span><br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;new_token = <span style="color:#82aaff;">secrets</span>.<span style="color:#82aaff;">token_urlsafe</span>(<span style="color:#f78c6c;">32</span>)<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c792ea;">await</span> db.<span style="color:#82aaff;">execute</span>(<span style="color:#c3e88d;">"UPDATE refresh_tokens SET revoked=1 WHERE user_id=?" </span>,<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(user_id,))<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c792ea;">return</span> new_token
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liquid Edge Input -->
+        <div style="padding:20px 32px 24px; background:rgba(10,10,15,0.45); backdrop-filter:blur(32px) saturate(1.2); -webkit-backdrop-filter:blur(32px) saturate(1.2); border-top:1px solid rgba(255,255,255,0.08); position:relative;">
+          <div style="max-width:820px; margin:0 auto; display:flex; gap:12px; background:rgba(255,255,255,0.03); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.08); border-radius:28px; padding:6px 6px 6px 24px; align-items:center; position:relative; overflow:hidden; transition:all 0.3s;">
+            <input type="text" placeholder="输入你的问题…" style="flex:1; background:none; border:none; color:#f0f0f8; font-size:15px; outline:none; padding:10px 0; font-family:inherit;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button style="background:none; border:none; color:#404068; font-size:18px; cursor:pointer; padding:8px; border-radius:12px;">📎</button>
+              <button style="background:none; border:none; color:#404068; font-size:18px; cursor:pointer; padding:8px; border-radius:12px;">🔍</button>
+              <button style="background:linear-gradient(135deg, rgba(0,240,255,0.9), rgba(189,0,255,0.9)); border:none; color:white; padding:11px 28px; border-radius:24px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 24px rgba(0,240,255,0.25), inset 0 1px 0 rgba(255,255,255,0.2); position:relative; overflow:hidden;">发送</button>
+            </div>
+          </div>
+          <div style="text-align:center; font-size:12px; color:#404068; margin-top:12px; letter-spacing:0.3px;">基于知识库内容回答 · 支持 Markdown 和代码高亮</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Source Drawer Mockup -->
+<div class="mockup" style="margin-top:24px;">
+  <div class="mockup-header">来源卡片 — 从右侧滑入的玻璃抽屉</div>
+  <div class="mockup-body" style="background:#0A0A0F; padding:0; overflow:hidden;">
+    <div style="display:flex; height:320px; background:transparent; position:relative;">
+      <div style="flex:1; padding:28px; display:flex; align-items:center; justify-content:center; color:#404068; font-size:14px;">
+        主内容区域（来源抽屉从右侧滑入）
+      </div>
+      <div style="width:320px; background:rgba(15,15,25,0.70); backdrop-filter:blur(32px) saturate(1.3); -webkit-backdrop-filter:blur(32px) saturate(1.3); border-left:1px solid rgba(255,255,255,0.08); padding:24px; display:flex; flex-direction:column; gap:14px; box-shadow:-8px 0 32px rgba(0,0,0,0.3);">
+        <div style="font-size:16px; font-weight:600; color:#f0f0f8; margin-bottom:4px;">📎 引用来源</div>
+
+        <div style="padding:14px; background:rgba(255,255,255,0.03); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:13px; font-weight:500; color:#a0a0c0;">auth_guide.md</span>
+            <span style="font-size:11px; color:#00F0FF;">92%</span>
+          </div>
+          <div style="height:3px; background:rgba(255,255,255,0.06); border-radius:2px; margin-bottom:8px; overflow:hidden;">
+            <div style="width:92%; height:100%; background:linear-gradient(90deg, #00F0FF, #BD00FF); border-radius:2px;"></div>
+          </div>
+          <div style="font-size:12px; color:#6868a0; line-height:1.5;">RS256 算法使用私钥签名，公钥验签。密钥长度建议 2048 位以上……</div>
+        </div>
+
+        <div style="padding:14px; background:rgba(255,255,255,0.03); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:13px; font-weight:500; color:#a0a0c0;">jwt_best_practices.pdf</span>
+            <span style="font-size:11px; color:#00F0FF;">87%</span>
+          </div>
+          <div style="height:3px; background:rgba(255,255,255,0.06); border-radius:2px; margin-bottom:8px; overflow:hidden;">
+            <div style="width:87%; height:100%; background:linear-gradient(90deg, #00F0FF, #BD00FF); border-radius:2px;"></div>
+          </div>
+          <div style="font-size:12px; color:#6868a0; line-height:1.5;">Access Token 建议有效期 15 分钟，Refresh Token 7 天……</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Design Tokens Reference -->
+<div class="section" style="margin-top: 24px;">
+  <h3>LiquidRAG 风格设计令牌</h3>
+  <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:12px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:#0A0A0F;border:1px solid rgba(255,255,255,0.08);"></div>
+      <div style="font-size:12px;color:#a0a0c0;line-height:1.5;">Obsidian<br><code style="font-size:11px;">#0A0A0F</code></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, rgba(0,240,255,0.10), rgba(189,0,255,0.06));border:1px solid rgba(255,255,255,0.08);"></div>
+      <div style="font-size:12px;color:#a0a0c0;line-height:1.5;">Sent Bubble<br><code style="font-size:11px;">aurora gradient</code></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, rgba(140,160,200,0.08), rgba(160,140,200,0.05));border:1px solid rgba(255,255,255,0.08);"></div>
+      <div style="font-size:12px;color:#a0a0c0;line-height:1.5;">Received<br><code style="font-size:11px;">slate gradient</code></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, #00F0FF, #BD00FF);"></div>
+      <div style="font-size:12px;color:#a0a0c0;line-height:1.5;">Accent<br><code style="font-size:11px;">#00F0FF → #BD00FF</code></div>
+    </div>
+  </div>
+  <div style="margin-top:16px; font-size:13px; color:#6868a0; line-height:1.7;">
+    <strong style="color:#a0a0c0;">3 层玻璃栈：</strong><br>
+    ① Luminance 层 — <code>backdrop-filter: blur(24px) brightness(1.25)</code> 提升背景亮度保证文字可读<br>
+    ② Chromatic 层 — <code>backdrop-filter: blur(24px) saturate(140%)</code> + 极光渐变着色<br>
+    ③ Noise 层 — 3% 透明度噪点纹理，防止 OLED 色带<br><br>
+    <strong style="color:#a0a0c0;">Liquid Edge：</strong> 输入栏聚焦时 1px conic-gradient 边框旋转动画<br>
+    <strong style="color:#a0a0c0;">Caustic BG：</strong> 缓慢移动的焦散光斑，模拟水下光线折射
+  </div>
+</div>
