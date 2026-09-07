@@ -4,7 +4,7 @@
 
 > **状态：路线已确认（2026-09-07）** —— 采用"方案二"（LangChain + LangGraph + Qdrant 本地 + FastAPI + React），
 > 经 7 个成熟开源产品对标后按**修订版 P0** 执行（`docs/plans/2026-09-07-mature-product-spec-and-p0.md`）。
-> 设计期完成，代码尚未开工。
+> 设计期完成；**P0 执行计划已产出（后端/前端），待审阅后开工**，代码尚未开始。
 
 ## 技术栈
 
@@ -40,7 +40,9 @@
 
 | 文档 | 内容 |
 |---|---|
-| `docs/plans/2026-09-07-mature-product-spec-and-p0.md` | **执行蓝图**：成熟化规格 + 修订 P0（P0-0~P0-12） |
+| `docs/plans/2026-09-07-p0-execution-backend.md` | **P0 后端执行计划**（P0-1~P0-8，含完整代码与 TDD 步骤） |
+| `docs/plans/2026-09-07-p0-execution-frontend.md` | **P0 前端执行计划**（P0-9~P0-12，样式 token/四视图/联调/分发） |
+| `docs/plans/2026-09-07-mature-product-spec-and-p0.md` | 执行蓝图：成熟化规格 + 修订 P0 总览与决策记录 |
 | `docs/research/2026-09-07-mature-benchmark.md` | 7 项目对标深化 + 许可矩阵 |
 | `docs/plans/2026-08-02-benchmark-and-roadmap.md` | 8 项目调研 + P0/P1/P2 路线（历史） |
 | `docs/plans/2026-07-22-backend-phase1.md` | 原 Phase1 8 Tasks（被修订 P0 吸收，历史参考） |
