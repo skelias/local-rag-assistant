@@ -15,6 +15,7 @@
 - [第 10 课：P0-3 收官 · 第一次真调用](lesson-10-p0-3-done-first-real-call.md)
 - [第 11 课：Embedding + Qdrant 混合检索](lesson-11-embedding-and-qdrant.md)
 - [第 12 课：RAG Engine](lesson-12-rag-engine.md)
+- [第 13 课：文档管线·解析与切分](lesson-13-doc-pipeline-parsers.md)
 
 ---
 
@@ -23,6 +24,7 @@
 1. **概念先讲**（大白话 + 比喻）→ **我示范** → **你亲手复现** → **答疑确认** → 才进下一步。
 2. 卡住/看不懂，把报错**原样贴**给我。
 3. 本项目的"说明书"（计划）在 `docs/plans/`，看不懂很正常，跟着课程走即可。
+
 
 
 
