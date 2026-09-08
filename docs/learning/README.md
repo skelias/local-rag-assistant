@@ -10,6 +10,7 @@
 - [第 5 课：数据库 / SQLite / async](lesson-05-database-sqlite.md)
 - [第 6 课：Pydantic + Repository](lesson-06-schemas-and-repositories.md)
 - [第 7 课：三个管理员 & P0-2 收官](lesson-07-finish-storage-layer.md)
+- [第 8 课：LLM Gateway 核心](lesson-08-llm-gateway-core.md)
 
 ---
 
@@ -18,6 +19,7 @@
 1. **概念先讲**（大白话 + 比喻）→ **我示范** → **你亲手复现** → **答疑确认** → 才进下一步。
 2. 卡住/看不懂，把报错**原样贴**给我。
 3. 本项目的"说明书"（计划）在 `docs/plans/`，看不懂很正常，跟着课程走即可。
+
 
 
 
