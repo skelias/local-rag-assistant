@@ -161,10 +161,16 @@ async def test_config_get_default_then_set(cfg):
 # ---------- 用量 ----------
 
 async def test_usage_record_and_summary(usage):
-    await usage.record(model="claude-sonnet-4-5", input_tokens=100, output_tokens=50, cost=0.0042)
-    await usage.record(model="deepseek-chat", input_tokens=10, output_tokens=5, cost=0.00001)
+    # 用户需求：不计费，只要 token 消耗 + 缓存命中率
+    # claude: 输出50 token，命中缓存80，未命中20
+    await usage.record(model="claude-sonnet-4-5", out_tokens=50, hit_tokens=80, miss_tokens=20)
+    # deepseek: 输出5 token，未命中10（无缓存命中）
+    await usage.record(model="deepseek-chat", out_tokens=5, hit_tokens=0, miss_tokens=10)
 
     s = await usage.summary()
     assert s["requests"] == 2
-    assert round(s["cost"], 5) == round(0.0042 + 0.00001, 5)
-    assert s["input_tokens"] == 110
+    assert s["output_tokens"] == 55
+    assert s["cache_hit_tokens"] == 80
+    assert s["cache_miss_tokens"] == 30
+    assert s["input_tokens"] == 110                     # 输入 = 命中 + 未命中
+    assert round(s["cache_hit_rate"], 4) == round(80 / 110, 4)   # 命中率 = 命中 / 输入

@@ -198,27 +198,35 @@ class ConfigRepository:
 
 
 class UsageRepository:
-    """用量表的"管理员"：记一次调用，算总计。"""
+    """用量表的"管理员"：记一次调用消耗（token + 缓存命中），算总计与命中率。"""
 
     def __init__(self, db: Database):
         self.db = db
 
-    async def record(self, model: str, input_tokens: int, output_tokens: int, cost: float) -> None:
-        """记一笔：哪个模型、多少输入/输出 token、花了多少钱。"""
+    async def record(self, model: str, out_tokens: int = 0,
+                     hit_tokens: int = 0, miss_tokens: int = 0) -> None:
+        """记一笔：模型、输出 token、缓存命中/未命中输入 token。"""
         await self.db.conn.execute(
-            "INSERT INTO usage_records(model,input_tokens,output_tokens,cost) VALUES(?,?,?,?)",
-            (model, input_tokens, output_tokens, cost),
+            "INSERT INTO usage_records(model,output_tokens,cache_hit_tokens,cache_miss_tokens) "
+            "VALUES(?,?,?,?)",
+            (model, out_tokens, hit_tokens, miss_tokens),
         )
         await self.db.conn.commit()
 
     async def summary(self) -> dict:
-        """统计：共多少次、总花费、总 token（消费概览卡片的数据来源）。"""
+        """统计：次数、输出 token、缓存命中/未命中、总输入、缓存命中率。
+        命中率 = 命中 / (命中 + 未命中)；没有输入时记 0。"""
         cur = await self.db.conn.execute(
             "SELECT COUNT(*) AS requests, "
-            "COALESCE(SUM(cost),0) AS cost, "
-            "COALESCE(SUM(input_tokens),0) AS input_tokens, "
-            "COALESCE(SUM(output_tokens),0) AS output_tokens "
+            "COALESCE(SUM(output_tokens),0) AS output_tokens, "
+            "COALESCE(SUM(cache_hit_tokens),0) AS cache_hit_tokens, "
+            "COALESCE(SUM(cache_miss_tokens),0) AS cache_miss_tokens "
             "FROM usage_records"
         )
         r = await cur.fetchone()
-        return dict(r) if r else {"requests": 0, "cost": 0, "input_tokens": 0, "output_tokens": 0}
+        d = dict(r) if r else {"requests": 0, "output_tokens": 0,
+                               "cache_hit_tokens": 0, "cache_miss_tokens": 0}
+        total_in = d["cache_hit_tokens"] + d["cache_miss_tokens"]
+        d["input_tokens"] = total_in
+        d["cache_hit_rate"] = round(d["cache_hit_tokens"] / total_in, 4) if total_in else 0.0
+        return d

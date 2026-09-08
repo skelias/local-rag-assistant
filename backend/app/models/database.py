@@ -75,13 +75,14 @@ CREATE TABLE IF NOT EXISTS user_config (
   value TEXT NOT NULL                            -- JSON 编码的值
 );
 
--- 用量表：AI 调用花了多少 token / 多少钱
+-- 用量表：每次 AI 调用消耗多少 token + 缓存命中情况（不计费，只统计）
+-- 输入 token = cache_hit_tokens + cache_miss_tokens；命中率 = 命中 / 输入
 CREATE TABLE IF NOT EXISTS usage_records (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   model TEXT NOT NULL,
-  input_tokens INTEGER NOT NULL DEFAULT 0,
   output_tokens INTEGER NOT NULL DEFAULT 0,
-  cost REAL NOT NULL DEFAULT 0,
+  cache_hit_tokens INTEGER NOT NULL DEFAULT 0,
+  cache_miss_tokens INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 

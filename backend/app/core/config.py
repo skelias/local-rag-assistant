@@ -32,9 +32,17 @@ class Settings(BaseSettings):
     claude_api_key: str = ""
     deepseek_api_key: str = ""
     openai_api_key: str = ""
+    glm_api_key: str = ""
+    kimi_api_key: str = ""
+
+    # ---- OpenAI 兼容端点的 base_url（各自默认；自建网关/代理时可覆盖） ----
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
+    openai_base_url: str = "https://api.openai.com/v1"
+    glm_base_url: str = "https://open.bigmodel.cn/api/paas/v4"
+    kimi_base_url: str = "https://api.moonshot.cn/v1"
 
     # ---- 模型默认值（仅兜底；真正生效值以后由数据库 user_config 提供） ----
-    default_chat_provider: str = "anthropic"    # anthropic | deepseek | openai_compat
+    default_chat_provider: str = "anthropic"  # anthropic | deepseek | glm | kimi | openai
     default_chat_model: str = "claude-sonnet-4-5"
     fallback_chat_provider: str = "deepseek"
     fallback_chat_model: str = "deepseek-chat"

@@ -1,17 +1,15 @@
 """LLM Gateway —— 统一模型调用层（"总机"）。
 
 谁想调模型（RAG 生成 / Agent 推理），都走这里；它负责：
-1. 按配置选 provider（anthropic / deepseek / openai_compat）+ 模型名；
+1. 按配置选 provider（anthropic / deepseek / glm / kimi / openai）+ 模型名；
 2. 流式转发（一个字一个字往外送）；
 3. 主 provider 报错/限流时，自动降级到备胎（fallback）；
-4. 用量/计费交给上层记账（ModelPricing 提供单价表）。
+4. 汇报用量：输出 token 与"缓存命中/未命中"输入 token（不计费，只统计）。
 
 设计要点：
 - 模型名与 provider 由"配置"决定，代码不写死任何具体模型；
 - provider 以"注册表"方式登记：名字 → 工厂函数（给 key/base_url，返回一个能 stream 的对象）；
 - 测试用假 provider 即可验证逻辑，无需真 Key / 联网。
-
-真实 SDK 薄封装（Anthropic / OpenAI 兼容）在下一课加入本文件。
 """
 from __future__ import annotations
 
@@ -30,11 +28,17 @@ class ChatMessage:
 
 @dataclass
 class StreamUsage:
-    """流式输出的"一小片"：要么是文字(text)，要么是结尾的用量(usage_*)。
+    """流式输出的"一小片"：要么是文字(text)，要么是结尾的用量(token 数)。
+    用量字段：
+    - out_tokens   输出 token
+    - hit_tokens   输入中"命中缓存"的 token（Claude/DeepSeek 会报告）
+    - miss_tokens  输入中"未命中缓存"的 token
+    输入总 token = hit + miss；缓存命中率 = hit / (hit + miss)。
     fallback：None=正常主路；False/True 见 ChatGateway 里赋值。"""
     text: str = ""
-    usage_in: int = 0
-    usage_out: int = 0
+    out_tokens: int = 0
+    hit_tokens: int = 0
+    miss_tokens: int = 0
     fallback: bool | None = None
 
 
@@ -45,33 +49,6 @@ class GatewayConfig:
     primary_model: str
     fallback_provider: str | None = None
     fallback_model: str | None = None
-
-
-# ---------- 计费 ----------
-
-class ModelPricing:
-    """按模型名前缀匹配单价（美元 / 1M tokens）。
-    表里没有的用兜底价；以后可让用户配置覆盖。"""
-
-    _TABLE: dict[str, tuple[float, float]] = {
-        "claude-opus": (15.0, 75.0),
-        "claude-sonnet": (3.0, 15.0),
-        "claude-": (3.0, 15.0),
-        "deepseek-chat": (0.27, 1.1),
-        "deepseek-reasoner": (0.55, 2.19),
-        "gpt-": (2.5, 10.0),
-    }
-    _DEFAULT = (1.0, 2.0)
-
-    @classmethod
-    def cost(cls, model: str, in_tokens: int, out_tokens: int) -> float:
-        """算钱：输入token数/100万 × 输入单价 + 输出token数/100万 × 输出单价。"""
-        pin, pout = cls._DEFAULT
-        for prefix, (i, o) in cls._TABLE.items():
-            if model.startswith(prefix):
-                pin, pout = i, o
-                break
-        return (in_tokens / 1_000_000) * pin + (out_tokens / 1_000_000) * pout
 
 
 # ---------- 错误 ----------
@@ -140,3 +117,103 @@ class ChatGateway:
         async for u in fallback.stream(messages, self.config.fallback_model):
             u.fallback = True                # 标记：这是降级后的输出
             yield u
+
+
+# ---------- 真实 Provider（薄封装官方 SDK） ----------
+
+class AnthropicProvider:
+    """Anthropic(Claude) 原生接口。
+
+    用量换算（Anthropic 语义）：
+    - miss = input_tokens(新输入) + cache_creation_input_tokens(新写入缓存的)
+    - hit  = cache_read_input_tokens(直接命中缓存读到的)
+    """
+
+    def __init__(self, api_key: str):
+        from anthropic import AsyncAnthropic
+        self._client = AsyncAnthropic(api_key=api_key)
+
+    async def stream(self, messages: list[ChatMessage], model: str) -> AsyncIterator[StreamUsage]:
+        try:
+            async with self._client.messages.stream(
+                model=model,
+                max_tokens=4096,
+                messages=[{"role": m.role, "content": m.content} for m in messages],
+            ) as stream:
+                async for text in stream.text_stream:
+                    yield StreamUsage(text=text)
+                u = (await stream.get_final_message()).usage
+                miss = (getattr(u, "input_tokens", 0) or 0) + (getattr(u, "cache_creation_input_tokens", 0) or 0)
+                hit = getattr(u, "cache_read_input_tokens", 0) or 0
+                yield StreamUsage(out_tokens=getattr(u, "output_tokens", 0) or 0,
+                                  hit_tokens=hit, miss_tokens=miss)
+        except Exception as e:      # 429 / 超时 / 网络 统一视为可重试错误 → 可降级
+            raise ProviderError(f"anthropic: {e}") from e
+
+
+class OpenAICompatProvider:
+    """一切 OpenAI 兼容端点：DeepSeek / OpenAI(GPT) / 智谱GLM / Kimi / 本地 Ollama…
+
+    用量换算（DeepSeek 报告 prompt_cache_hit/miss；GPT 不报缓存 → 全算 miss）。
+    """
+
+    def __init__(self, api_key: str, base_url: str | None = None):
+        from openai import AsyncOpenAI
+        kwargs = {"api_key": api_key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        self._client = AsyncOpenAI(**kwargs)
+
+    async def stream(self, messages: list[ChatMessage], model: str) -> AsyncIterator[StreamUsage]:
+        try:
+            stream = await self._client.chat.completions.create(
+                model=model,
+                messages=[{"role": m.role, "content": m.content} for m in messages],
+                stream=True,
+                stream_options={"include_usage": True},   # 让结尾带上 usage
+            )
+            async for chunk in stream:
+                if chunk.usage:                            # 结尾的用量块
+                    u = chunk.usage
+                    hit = getattr(u, "prompt_cache_hit_tokens", 0) or 0
+                    miss = getattr(u, "prompt_cache_miss_tokens", None)
+                    if miss is None:                       # GPT 不报缓存 → 全部算 miss
+                        miss = u.prompt_tokens or 0
+                    yield StreamUsage(out_tokens=u.completion_tokens or 0,
+                                      hit_tokens=hit, miss_tokens=miss)
+                    continue
+                if chunk.choices:
+                    delta = chunk.choices[0].delta
+                    if delta and delta.content:
+                        yield StreamUsage(text=delta.content)
+        except Exception as e:
+            raise ProviderError(f"openai_compat: {e}") from e
+
+
+# ---------- 注册工厂：看配置里有哪些 Key，就把哪些 provider 登记上 ----------
+
+def _usable_key(key: str) -> bool:
+    """判断 Key 是否"真的可用"：非空 且 不是占位符(sk-xxxx…)。"""
+    return bool(key) and "xxxxx" not in key.lower()
+
+
+def build_default_registry(cfg) -> ProviderRegistry:
+    """根据配置(哪些 Key 填了)登记 provider。
+    约定：provider 名字 = 读 key/base_url 的后缀，
+    例如名字 "glm" → cfg.glm_api_key / cfg.glm_base_url。"""
+    reg = ProviderRegistry()
+
+    if _usable_key(cfg.claude_api_key):
+        reg.register("anthropic", lambda key, base_url=None: AnthropicProvider(key))
+
+    compat = [
+        ("deepseek", cfg.deepseek_api_key, cfg.deepseek_base_url),
+        ("openai", cfg.openai_api_key, cfg.openai_base_url),
+        ("glm", cfg.glm_api_key, cfg.glm_base_url),
+        ("kimi", cfg.kimi_api_key, cfg.kimi_base_url),
+    ]
+    for name, key, base_url in compat:
+        if _usable_key(key):  # 只登记"填了真 Key"的厂商
+            reg.register(name, lambda key, base_url=base_url: OpenAICompatProvider(key, base_url))
+
+    return reg
