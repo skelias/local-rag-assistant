@@ -8,10 +8,13 @@ pydantic-settings>=2.5
 # P0-2 数据层：异步访问 SQLite（连接我们的 data/rag.db）
 aiosqlite>=0.20
 
+# P0-3 模型层：云端 LLM 官方 SDK（DeepSeek 走 OpenAI 兼容接口）
+anthropic>=0.40
+openai>=1.55
+
 # ------------------------------------------------------------------
 # 以下库会在对应课程里逐个加进来（到时再取消注释/追加真实版本）：
 # P0-2 向量存储:  qdrant-client
-# P0-3 模型层:    anthropic / openai
 # P0-4 向量层:    FlagEmbedding / torch（体积大，单独一课）
 # P0-7 Web 层:    fastapi / uvicorn / sse-starlette / python-multipart / httpx
 # ------------------------------------------------------------------
