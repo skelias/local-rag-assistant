@@ -35,3 +35,40 @@ backend\venv\Scripts\python -m pip list    # 看看房间里已装了哪些库
 
 - 计划文档里列的重型库（torch / FlagEmbedding 等，几个 GB）**先不装**，到 P0-4 那课再装；
 - 教学每课只装当课需要的最小依赖。
+
+---
+
+## backend 目录导游（backend 里各文件夹分工）
+
+```
+backend\                    ← 后端程序的家
+├── app\                    ← 程序代码本体（python 包）
+│   ├── core\               ← 核心部件：配置 / AI 调用 / 向量库
+│   ├── models\             ← 数据模型：定义数据"长什么样"
+│   ├── services\           ← 业务逻辑：真正干活的模块
+│   └── api\                ← 对外窗口：浏览器访问的入口（FastAPI 路由）
+├── tests\                  ← 测试的家（pytest 质检员）
+└── venv\                   ← 独立房间：python + 库（别手改里面）
+```
+
+## venv 三步走（从零配置）
+
+```powershell
+# 1) 创建（在哪个目录建，房间开在哪）
+python -m venv D:\练习venv
+
+# 2) 用房间里的 python 装库
+D:\练习venv\Scripts\python -m pip install requests
+
+# 3) 激活（可选；激活后命令行出现 (练习venv) 前缀，直接敲 python 即房间内）
+D:\练习venv\Scripts\Activate.ps1
+deactivate        # 退出房间
+# 不激活也行：全程用完整路径 D:\练习venv\Scripts\python
+```
+
+## 重点提醒
+
+- venv 文件夹**不进 git**（大 + 每台机器不同）；`.gitignore` 已写 `venv/`。
+- 进 git 的是 `requirements.txt`（购物清单），别人 clone 后自建房间照单安装。
+- venv 里面（Scripts / Lib\site-packages / pyvenv.cfg）**永远不要手动改**。
+
