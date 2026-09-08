@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     default_chat_provider: str = "anthropic"  # anthropic | deepseek | glm | kimi | openai
     default_chat_model: str = "claude-sonnet-4-5"
     fallback_chat_provider: str = "deepseek"
-    fallback_chat_model: str = "deepseek-chat"
+    fallback_chat_model: str = "deepseek-v4-flash"   # 官方名（deepseek-chat 已于 2026-07 停用）
     default_embedding_model: str = "bge-m3"
 
     # ---- Qdrant 向量库 ----
