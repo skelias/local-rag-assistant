@@ -1,4 +1,4 @@
-"""查询某家兼容厂商账号下"可用模型清单"（免得凭印象猜模型名）。
+﻿"""查询某家兼容厂商账号下"可用模型清单"（免得凭印象猜模型名）。
 
 用法（在 backend 目录）：
    venv/Scripts/python scripts/list_models.py [provider]
@@ -23,7 +23,7 @@ async def main() -> None:
     base = getattr(cfg, f"{provider}_base_url", None)
 
     if not _usable_key(key):
-        print(f"⚠️  {provider} 的 Key 没填或还是占位符 —— 先编辑项目根 .env")
+        print(f"[注意]  {provider} 的 Key 没填或还是占位符 —— 先编辑项目根 .env")
         return
 
     from openai import AsyncOpenAI
@@ -40,3 +40,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+

@@ -50,30 +50,40 @@ async def main() -> None:
     print(f"备胎 = {gw_cfg.fallback_provider}/{gw_cfg.fallback_model}")
     print("已登记的 provider：", sorted(reg._factories.keys()))
     if not reg._factories:
-        print("⚠️  没有填任何 Key —— 请先编辑项目根 .env")
+        print("[注意]  没有填任何 Key —— 请先编辑项目根 .env")
         return
 
     gate = ChatGateway(reg, gw_cfg, keys, base_urls)
-    text, usage, used_fallback = "", None, None
-    async for u in gate.stream(
-        [ChatMessage(role="user", content="用一句话自我介绍，并说'连接成功'。")]
-    ):
-        if u.text:
-            text += u.text
-        if u.out_tokens:
-            usage = u
-        if u.fallback is not None:
-            used_fallback = u.fallback
 
-    print("\n模型回复：", text)
-    if usage:
-        total_in = usage.hit_tokens + usage.miss_tokens
-        rate = usage.hit_tokens / total_in if total_in else 0.0
-        print(f"用量：输出 {usage.out_tokens} token | "
-              f"输入 命中缓存 {usage.hit_tokens} + 未命中 {usage.miss_tokens} "
-              f"| 缓存命中率 {rate:.1%}")
-    print("降级：", "是（用了备胎）" if used_fallback else "否")
+    # 共享长前缀：第二轮会命中 DeepSeek 的自动 prompt 缓存 → 演示"缓存命中率"
+    prefix = "【知识库背景】" + (
+        "FastAPI 是一个现代 Python Web 框架；RAG 指检索增强生成：先建索引再召回再生成。\n" * 30
+    )
+
+    print("\n=== 真实调用（连打两轮，演示缓存命中率） ===")
+    for rnd in (1, 2):
+        text, usage, used_fallback = "", None, None
+        async for u in gate.stream([
+            ChatMessage(role="system", content=prefix),
+            ChatMessage(role="user", content=f"请只回复：第 {rnd} 次调用成功。"),
+        ]):
+            if u.text:
+                text += u.text
+            if u.out_tokens:
+                usage = u
+            if u.fallback is not None:
+                used_fallback = u.fallback
+
+        print(f"\n第 {rnd} 次回复：{text.strip()}")
+        if usage:
+            total_in = usage.hit_tokens + usage.miss_tokens
+            rate = usage.hit_tokens / total_in if total_in else 0.0
+            print(f"  输出 {usage.out_tokens} token | "
+                  f"输入 命中缓存 {usage.hit_tokens} / 未命中 {usage.miss_tokens} "
+                  f"| 缓存命中率 {rate:.1%}")
+        print("  降级：", "是（用了备胎）" if used_fallback else "否")
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
