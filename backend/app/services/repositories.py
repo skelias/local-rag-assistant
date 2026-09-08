@@ -113,3 +113,112 @@ class DocumentRepository:
             (kb_id,),
         )
         return [dict(r) for r in await cur.fetchall()]
+
+
+class ChunkRepository:
+    """分块表的"管理员"：写入块、按文档取块、标记已索引。"""
+
+    def __init__(self, db: Database):
+        self.db = db
+
+    async def delete_by_document(self, doc_id: int) -> None:
+        """删掉某文档的全部旧分块（重新解析前先清场）。"""
+        await self.db.conn.execute("DELETE FROM chunks WHERE document_id=?", (doc_id,))
+        await self.db.conn.commit()
+
+    async def insert_many(self, items: list[dict]) -> None:
+        """批量插入分块。items 元素：{kb_id, document_id, seq, text, meta}。"""
+        await self.db.conn.executemany(
+            "INSERT INTO chunks(kb_id,document_id,seq,text,meta,status) "
+            "VALUES(:kb_id,:document_id,:seq,:text,:meta,:status)",
+            [
+                {**i,
+                 "meta": _json(i.get("meta", {})),          # meta 字典 → JSON 字符串
+                 "status": i.get("status", "pending")}
+                for i in items
+            ],
+        )
+        await self.db.conn.commit()
+
+    async def _fetch(self, sql: str, params: tuple) -> list[dict]:
+        cur = await self.db.conn.execute(sql, params)
+        rows = await cur.fetchall()
+        # meta 是 JSON 字符串，读回时还原成字典
+        return [dict(r) | {"meta": _loads(r["meta"], {})} for r in rows]
+
+    async def list_pending(self, doc_id: int) -> list[dict]:
+        """取某文档还没入向量库的分块（供"分段预览"和"确认入库"用）。"""
+        return await self._fetch(
+            "SELECT * FROM chunks WHERE document_id=? AND status='pending' ORDER BY seq",
+            (doc_id,),
+        )
+
+    async def list_all(self, doc_id: int) -> list[dict]:
+        """取某文档全部分块（不挑状态）。"""
+        return await self._fetch(
+            "SELECT * FROM chunks WHERE document_id=? ORDER BY seq",
+            (doc_id,),
+        )
+
+    async def mark_indexed(self, doc_id: int) -> None:
+        """把某文档所有块标记为已入向量库（status='indexed'）。"""
+        await self.db.conn.execute(
+            "UPDATE chunks SET status='indexed' WHERE document_id=?", (doc_id,)
+        )
+        await self.db.conn.commit()
+
+
+class ConfigRepository:
+    """设置表的"管理员"：键值对读写，值用 JSON 编码。"""
+
+    def __init__(self, db: Database):
+        self.db = db
+
+    async def get(self, key: str, default: Any = None) -> Any:
+        """读一个设置；没设置过时返回 default。"""
+        cur = await self.db.conn.execute(
+            "SELECT value FROM user_config WHERE key=?", (key,)
+        )
+        r = await cur.fetchone()
+        return _loads(r["value"], default) if r else default
+
+    async def set(self, key: str, value: Any) -> None:
+        """写一个设置；键已存在则覆盖（ON CONFLICT DO UPDATE）。"""
+        await self.db.conn.execute(
+            "INSERT INTO user_config(key,value) VALUES(?,?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, _json(value)),
+        )
+        await self.db.conn.commit()
+
+    async def all(self) -> dict[str, Any]:
+        """把所有设置倒出来（设置页/启动时读配置用）。"""
+        cur = await self.db.conn.execute("SELECT key,value FROM user_config")
+        return {r["key"]: _loads(r["value"]) for r in await cur.fetchall()}
+
+
+class UsageRepository:
+    """用量表的"管理员"：记一次调用，算总计。"""
+
+    def __init__(self, db: Database):
+        self.db = db
+
+    async def record(self, model: str, input_tokens: int, output_tokens: int, cost: float) -> None:
+        """记一笔：哪个模型、多少输入/输出 token、花了多少钱。"""
+        await self.db.conn.execute(
+            "INSERT INTO usage_records(model,input_tokens,output_tokens,cost) VALUES(?,?,?,?)",
+            (model, input_tokens, output_tokens, cost),
+        )
+        await self.db.conn.commit()
+
+    async def summary(self) -> dict:
+        """统计：共多少次、总花费、总 token（消费概览卡片的数据来源）。"""
+        cur = await self.db.conn.execute(
+            "SELECT COUNT(*) AS requests, "
+            "COALESCE(SUM(cost),0) AS cost, "
+            "COALESCE(SUM(input_tokens),0) AS input_tokens, "
+            "COALESCE(SUM(output_tokens),0) AS output_tokens "
+            "FROM usage_records"
+        )
+        r = await cur.fetchone()
+        return dict(r) if r else {"requests": 0, "cost": 0, "input_tokens": 0, "output_tokens": 0}
