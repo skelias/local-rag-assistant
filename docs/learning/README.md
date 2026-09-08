@@ -8,6 +8,7 @@
 - [第 2 课：虚拟环境 venv + pip](lesson-02-venv-and-pip.md)
 - [第 4 课：git + requirements](lesson-04-git-and-requirements.md)
 - [第 5 课：数据库 / SQLite / async](lesson-05-database-sqlite.md)
+- [第 6 课：Pydantic + Repository](lesson-06-schemas-and-repositories.md)
 
 ---
 
@@ -16,5 +17,6 @@
 1. **概念先讲**（大白话 + 比喻）→ **我示范** → **你亲手复现** → **答疑确认** → 才进下一步。
 2. 卡住/看不懂，把报错**原样贴**给我。
 3. 本项目的"说明书"（计划）在 `docs/plans/`，看不懂很正常，跟着课程走即可。
+
 
 
