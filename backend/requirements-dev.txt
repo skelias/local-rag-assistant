@@ -1,0 +1,6 @@
+# ===== 开发/测试依赖：只在你"写代码"时用 =====
+# -r requirements.txt 的意思是：先把正式依赖全装进来
+-r requirements.txt
+
+# 测试框架
+pytest>=8.3
