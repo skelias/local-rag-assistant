@@ -161,3 +161,66 @@ def split_python_code(code: str, max_lines: int = 40, min_lines: int = 5) -> lis
         parts[-2] += parts[-1]
         parts.pop()
     return parts
+
+
+# ---------------- 流程编排：落盘 → 解析分块 → 预览 → 确认入库 ----------------
+
+def save_upload(content: bytes, filename: str, kb_id: int,
+                base_dir: Path | None = None) -> Path:
+    """把上传的文件字节存到 data/uploads/kb{id}/ 下，返回落盘路径。
+
+    base_dir 默认用配置里的 UPLOAD_DIR；测试可传临时目录。
+    """
+    from app.core.config import settings
+    root = base_dir or settings.UPLOAD_DIR
+    name = Path(filename).name                    # 只留文件名，去掉可能的路径成分
+    folder = root / f"kb{kb_id}"
+    folder.mkdir(parents=True, exist_ok=True)
+    dest = folder / name
+    dest.write_bytes(content)
+    return dest
+
+
+async def run_upload_pipeline(path: Path, chunk_repo, doc_id: int, kb_id: int) -> int:
+    """同步段（快）：解析 → 分块 → 写 SQLite(pending)。返回 pending 块数。
+
+    文档状态由调用方负责：先 uploading，跑完本函数后置 parsed（“待确认”）。
+    """
+    content = path.read_text(encoding="utf-8", errors="replace")
+    ext = path.suffix.lower()
+    blocks = parse_document(path, content)
+
+    if ext in _CODE_EXTS:
+        # 代码类：.py 用“按行批切”，其余代码类型退回通用切分
+        if ext == ".py":
+            parts: list[str] = []
+            for b in blocks:
+                parts.extend(split_python_code(b.text))
+            chunks = [Chunk(text=p, meta={"lang": ext.lstrip(".")}, seq=i)
+                      for i, p in enumerate(parts)]
+        else:
+            chunks = [Chunk(text=b.text, meta={**b.meta, "lang": ext.lstrip(".")}, seq=i)
+                      for i, b in enumerate(RecursiveSplitter().split(blocks))]
+    else:
+        chunks = RecursiveSplitter().split(blocks)
+
+    rows = [{"kb_id": kb_id, "document_id": doc_id, "seq": c.seq,
+             "text": c.text, "meta": {"file": path.name, **c.meta}}
+            for c in chunks]
+
+    await chunk_repo.delete_by_document(doc_id)   # 清旧块（重新上传场景）
+    await chunk_repo.insert_many(rows)
+    return len(rows)
+
+
+async def confirm_document_index(doc_id: int, kb_id: int, doc_repo, chunk_repo,
+                                 store) -> None:
+    """确认入库：把 pending chunks 向量化写入向量库 → 标记 indexed → 文档 ready。
+
+    store 需有 async upsert_chunks(chunks)；测试注入 RecordingStore / FakeEmbedder+QdrantStore。
+    """
+    rows = await chunk_repo.list_pending(doc_id)
+    if rows:
+        await store.upsert_chunks([{**r, "id": r["id"]} for r in rows])
+        await chunk_repo.mark_indexed(doc_id)
+    await doc_repo.set_status(doc_id, "ready")
