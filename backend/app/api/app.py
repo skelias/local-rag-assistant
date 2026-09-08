@@ -9,11 +9,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import knowledge
+from app.api.routes import chat, config, knowledge
 from app.core.config import settings
 
 
-def create_app(db=None, vector_store=None, upload_dir=None) -> FastAPI:
+def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # ---- 启动：缺啥补啥（真组件） ----
@@ -41,6 +41,38 @@ def create_app(db=None, vector_store=None, upload_dir=None) -> FastAPI:
         if app.state.upload_dir is None:
             app.state.upload_dir = settings.UPLOAD_DIR
 
+        if app.state.chat_gateway is None:
+            from app.core.llm_gateway import (
+                ChatGateway,
+                GatewayConfig,
+                build_default_registry,
+            )
+
+            reg = build_default_registry(settings)
+            keys = {
+                "claude_api_key": settings.claude_api_key,
+                "deepseek_api_key": settings.deepseek_api_key,
+                "openai_api_key": settings.openai_api_key,
+                "glm_api_key": settings.glm_api_key,
+                "kimi_api_key": settings.kimi_api_key,
+            }
+            base_urls = {
+                "deepseek": settings.deepseek_base_url,
+                "openai": settings.openai_base_url,
+                "glm": settings.glm_base_url,
+                "kimi": settings.kimi_base_url,
+            }
+            app.state.chat_gateway = ChatGateway(
+                reg,
+                GatewayConfig(
+                    primary_provider=settings.default_chat_provider,
+                    primary_model=settings.default_chat_model,
+                    fallback_provider=settings.fallback_chat_provider,
+                    fallback_model=settings.fallback_chat_model,
+                ),
+                keys, base_urls,
+            )
+
         yield
 
         # ---- 关闭：回收自己创建的 ----
@@ -60,6 +92,7 @@ def create_app(db=None, vector_store=None, upload_dir=None) -> FastAPI:
     app.state.db = db
     app.state.vector_store = vector_store
     app.state.upload_dir = upload_dir
+    app.state.chat_gateway = chat_gateway
 
     app.add_middleware(
         CORSMiddleware,
@@ -69,6 +102,8 @@ def create_app(db=None, vector_store=None, upload_dir=None) -> FastAPI:
     )
 
     app.include_router(knowledge.router)
+    app.include_router(chat.router)
+    app.include_router(config.router)
 
     @app.get("/api/health")
     async def health():

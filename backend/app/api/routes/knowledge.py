@@ -6,16 +6,21 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from app.api.deps import get_db, get_upload_dir, get_vector_store
+from app.api.deps import get_chat_gateway, get_db, get_upload_dir, get_vector_store
 from app.core.config import settings
-from app.models.schemas import DocumentCreate
+from app.models.schemas import DocumentCreate, HitTestRequest
 from app.services.doc_pipeline import (
     PipelineError,
     confirm_document_index,
     run_upload_pipeline,
     save_upload,
 )
-from app.services.repositories import ChunkRepository, DocumentRepository
+from app.services.rag_engine import RAGEngine, RetrievalParamsResolver
+from app.services.repositories import (
+    ChunkRepository,
+    ConfigRepository,
+    DocumentRepository,
+)
 
 router = APIRouter(prefix="/api", tags=["knowledge"])
 
@@ -120,3 +125,33 @@ async def delete_document(doc_id: int, kb_id: int,
     except Exception:
         pass
     return {"ok": True}
+
+
+@router.post("/knowledge/{kb_id}/hit-test")
+async def hit_test(
+    kb_id: int,
+    req: HitTestRequest,
+    db=Depends(get_db),
+    store=Depends(get_vector_store),
+    gateway=Depends(get_chat_gateway),
+):
+    """命中测试（检索调试台）：与对话共用同一份检索参数（单一参数源）。
+
+    返回 {params, hits} —— 前端可据此展示"每条命中来自哪路、分多少"。
+    """
+    engine = RAGEngine(store=store, gateway=gateway,
+                       cfg=ConfigRepository(db), kb_id=kb_id)
+    _, sources = await engine.retrieve(
+        req.query, kb_id=kb_id,
+        overrides={"top_k": req.top_k, "threshold": req.threshold,
+                   "rerank_enabled": req.rerank_enabled},
+    )
+    params = await RetrievalParamsResolver(ConfigRepository(db), kb_id).resolve(
+        {"top_k": req.top_k, "threshold": req.threshold,
+         "rerank_enabled": req.rerank_enabled},
+    )
+    return {
+        "params": {"top_k": params.top_k, "threshold": params.threshold,
+                   "rerank_enabled": params.rerank_enabled},
+        "hits": [s.to_dict() for s in sources],
+    }

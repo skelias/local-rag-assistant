@@ -22,3 +22,7 @@ def get_vector_store(request: Request):
 
 def get_upload_dir(request: Request):
     return _need(request, "upload_dir")
+
+
+def get_chat_gateway(request: Request):
+    return _need(request, "chat_gateway")
