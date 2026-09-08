@@ -56,5 +56,13 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8000
 
+    # ---- 上传规则 ----
+    max_upload_mb: int = 100
+    allowed_exts: tuple = (
+        ".md", ".txt", ".markdown",
+        ".py", ".js", ".ts", ".tsx", ".jsx",
+        ".json", ".yaml", ".yml", ".toml", ".csv", ".html", ".css",
+    )
+
 
 settings = Settings()

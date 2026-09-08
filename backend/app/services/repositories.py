@@ -114,6 +114,11 @@ class DocumentRepository:
         )
         return [dict(r) for r in await cur.fetchall()]
 
+    async def delete(self, doc_id: int) -> None:
+        """删除文档记录（chunks 由外键 ON DELETE CASCADE 自动清掉）。"""
+        await self.db.conn.execute("DELETE FROM documents WHERE id=?", (doc_id,))
+        await self.db.conn.commit()
+
 
 class ChunkRepository:
     """分块表的"管理员"：写入块、按文档取块、标记已索引。"""
