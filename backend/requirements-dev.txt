@@ -2,7 +2,10 @@
 # -r requirements.txt 的意思是：先把正式依赖全装进来
 -r requirements.txt
 
-# 测试框架
+# ---- 测试 ----
 pytest>=8.3
-# 让 pytest 能跑 async 测试
 pytest-asyncio>=0.24
+httpx>=0.27        # 测试里用 ASGITransport 内存调用 FastAPI
+
+# ---- 仅开发：下载大模型脚本用（ModelScope，国内快）----
+modelscope

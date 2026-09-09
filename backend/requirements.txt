@@ -2,22 +2,26 @@
 # 写法两种：包名==精确版本（最稳） 或 包名>=最低版本（允许升）
 # 铁律：每课装了新库，就同步在下面加一行 —— 清单永远等于事实！
 
-# 配置（读取 .env / 环境变量；pydantic 会自动一起装）
+# ---- 配置 ----
 pydantic-settings>=2.5
 
-# P0-2 数据层：异步访问 SQLite（连接我们的 data/rag.db）
+# ---- P0-2 数据层 ----
 aiosqlite>=0.20
 
-# P0-4 向量库：Qdrant 本地文件模式（稠密+稀疏、RRF 融合检索）
-qdrant-client>=1.12
+# ---- P0-4 向量库与真实嵌入 ----
+qdrant-client>=1.12          # Qdrant 本地文件模式（稠密+稀疏、RRF）
+fastembed>=0.8               # 轻量真实嵌入(ONNX)：稠密 bge-small-zh + 稀疏 BM25
 
-# P0-3 模型层：云端 LLM 官方 SDK（DeepSeek 走 OpenAI 兼容接口）
-anthropic>=0.40
-openai>=1.55
+# 可选升级：BGE-M3（需 torch，体积大）。装上后把 embedding 实现换成 BGEM3Provider 即可
+# FlagEmbedding>=1.2.11
+# torch  # CPU 源安装：--index-url https://download.pytorch.org/whl/cpu
 
-# ------------------------------------------------------------------
-# 以下库会在对应课程里逐个加进来（到时再取消注释/追加真实版本）：
-# P0-4 真实嵌入:   FlagEmbedding / torch（体积大，单独一课；未装时测试用 FakeEmbedder 不依赖它）
-# P0-6 文档解析:   （PDF/DOCX 解析器待选：Docling / unstructured）
-# P0-7 Web 层:    fastapi / uvicorn / sse-starlette / python-multipart / httpx
-# ------------------------------------------------------------------
+# ---- P0-3 模型层（云端 LLM） ----
+anthropic>=0.40              # Claude 原生
+openai>=1.55                 # OpenAI 兼容：DeepSeek / GPT / GLM / Kimi
+
+# ---- P0-7 Web 层 ----
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sse-starlette>=2.1
+python-multipart>=0.0.9

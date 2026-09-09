@@ -63,7 +63,8 @@ class QdrantStore:
                  vector_size: int, embedder: EmbeddingProvider):
         self.path = Path(path)
         self.collection = collection
-        self.vector_size = vector_size
+        # 稠密维度以"嵌入模型"为准（换模型不会建错集合）
+        self.vector_size = embedder.dim
         self.embedder = embedder
         self._client: AsyncQdrantClient | None = None
 

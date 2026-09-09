@@ -20,6 +20,7 @@
 - [第 15 课：FastAPI 第一个 Web 服务](lesson-15-fastapi-first-server.md)
 - [第 16 课：DI + 知识库路由](lesson-16-knowledge-routes-di.md)
 - [第 17 课：SSE 对话 + 命中测试 + 配置](lesson-17-sse-chat-hit-test.md)
+- [第 18 课：真实端到端 MVP（P0-8 收官）](lesson-18-real-e2e-mvp.md)
 
 ---
 
@@ -28,6 +29,7 @@
 1. **概念先讲**（大白话 + 比喻）→ **我示范** → **你亲手复现** → **答疑确认** → 才进下一步。
 2. 卡住/看不懂，把报错**原样贴**给我。
 3. 本项目的"说明书"（计划）在 `docs/plans/`，看不懂很正常，跟着课程走即可。
+
 
 
 

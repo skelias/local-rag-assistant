@@ -7,8 +7,14 @@
 """
 from __future__ import annotations
 
+import os
 from abc import ABC, abstractmethod
 from typing import Any
+
+# 国内访问 HuggingFace 模型仓库的通用设置（走镜像 + 禁 Xet，Xet 在镜像上会 403）
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+os.environ["HF_HUB_DISABLE_XET"] = "1"
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
 
 class EmbeddingProvider(ABC):
@@ -76,3 +82,56 @@ class BGEM3Provider(EmbeddingProvider):
                                  return_colbert_vecs=False)["lexical_weights"]
         )
         return [{int(k): float(v) for k, v in weights.items()} for weights in out]
+
+
+class FastEmbedProvider(EmbeddingProvider):
+    """轻量真实嵌入（ONNX，无 torch）：稠密 bge-small-zh + 稀疏 BM25。
+
+    - 稠密：BAAI/bge-small-zh-v1.5（约 90MB，中文友好，512 维）
+    - 稀疏：Qdrant/bm25（精确关键词命中）
+    首次 encode 会自动下载模型（走上面设置的 hf-mirror）。
+    之后网络允许时，可把 main_provider 换回 BGE-M3 —— 上层接口不变。
+    """
+
+    dim = 512  # bge-small-zh-v1.5 稠密维度
+
+    def __init__(self, dense_model: str = "BAAI/bge-small-zh-v1.5",
+                 sparse_model: str = "Qdrant/bm25"):
+        self.dense_model = dense_model
+        self.sparse_model = sparse_model
+        self._dense = None
+        self._sparse = None
+
+    def _load_dense(self):
+        if self._dense is None:
+            try:
+                from fastembed import TextEmbedding
+            except ImportError as e:
+                raise RuntimeError("FastEmbedProvider 需要 fastembed：pip install fastembed") from e
+            self._dense = TextEmbedding(self.dense_model)
+        return self._dense
+
+    def _load_sparse(self):
+        if self._sparse is None:
+            try:
+                from fastembed import SparseTextEmbedding
+            except ImportError as e:
+                raise RuntimeError("FastEmbedProvider 需要 fastembed：pip install fastembed") from e
+            self._sparse = SparseTextEmbedding(self.sparse_model)
+        return self._sparse
+
+    async def encode_dense(self, texts: list[str]) -> list[list[float]]:
+        import asyncio
+        model = self._load_dense()
+        vectors = await asyncio.to_thread(lambda: list(model.embed(texts)))
+        return [v.tolist() for v in vectors]
+
+    async def encode_sparse(self, texts: list[str]) -> list[dict[int, float]]:
+        import asyncio
+        model = self._load_sparse()
+        embeddings = await asyncio.to_thread(lambda: list(model.embed(texts)))
+        result = []
+        for e in embeddings:
+            result.append({int(idx): float(val)
+                           for idx, val in zip(e.indices.tolist(), e.values.tolist())})
+        return result
