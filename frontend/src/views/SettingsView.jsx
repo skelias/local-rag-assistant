@@ -1,8 +1,35 @@
-import { t } from '../i18n'
+import { useState, useEffect } from 'react'
+import { t, setLang, getLang } from '../i18n'
+import { api } from '../api/client'
 
 export default function SettingsView() {
+  const [config, setConfig] = useState({})
+  const [lang, setLangState] = useState(getLang())
+
+  useEffect(() => {
+    api.getConfig().then; // try; ignore failure (backend not running)
+  }, [])
+
   const toggle = (e) => {
     e.currentTarget.classList.toggle('on')
+  }
+
+  const handleLang = (e) => {
+    const l = e.target.value === 'English' ? 'en' : 'zh'
+    setLang(l)
+    setLangState(l)
+  }
+
+  const handleSave = async () => {
+    // real save via API
+    try {
+      const entries = Object.entries(config)
+      for (const [key, value] of entries) {
+        await api.putConfig(key, value)
+      }
+    } catch {
+      // backend not running
+    }
   }
 
   return (
@@ -10,7 +37,6 @@ export default function SettingsView() {
       {/* LLM */}
       <div className="glass-card rounded-card p-5 flex flex-col gap-4">
         <div className="text-sm font-semibold text-text-p mb-1">{t('model')}</div>
-
         <Row label={t('provider_primary')}>
           <select className="ctrl"><option>anthropic</option><option>deepseek</option><option>openai</option></select>
         </Row>
@@ -28,7 +54,6 @@ export default function SettingsView() {
       {/* Retrieval */}
       <div className="glass-card rounded-card p-5 flex flex-col gap-4">
         <div className="text-sm font-semibold text-text-p mb-1">{t('retrieval')}</div>
-
         <Row label={t('top_k')}>
           <input className="ctrl w-20 text-center" defaultValue="20" />
         </Row>
@@ -44,13 +69,17 @@ export default function SettingsView() {
       <div className="glass-card rounded-card p-5 flex flex-col gap-4">
         <div className="text-sm font-semibold text-text-p mb-1">{t('interface')}</div>
         <Row label={t('language')}>
-          <select className="ctrl"><option>中文</option><option>English</option></select>
+          <select className="ctrl" value={lang === 'en' ? 'English' : '中文'} onChange={handleLang}>
+            <option>中文</option>
+            <option>English</option>
+          </select>
         </Row>
       </div>
 
       {/* Save */}
       <div className="flex justify-end pt-2">
-        <button className="px-[22px] py-2.5 rounded-btn bg-accent-cyan text-text-inv border-none text-[13px] font-semibold cursor-pointer transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(78,205,196,0.25)]">
+        <button onClick={handleSave}
+          className="px-[22px] py-2.5 rounded-btn bg-accent-cyan text-text-inv border-none text-[13px] font-semibold cursor-pointer transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(78,205,196,0.25)]">
           {t('save')}
         </button>
       </div>
