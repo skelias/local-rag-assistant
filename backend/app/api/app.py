@@ -5,12 +5,34 @@
 - 测试：注入假组件（临时 DB / Fake 向量库 / 临时上传目录），不走 lifespan。
 """
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.api.routes import chat, config, knowledge
 from app.core.config import settings
+
+
+def _mount_frontend(app: FastAPI) -> None:
+    """若 frontend/dist 已构建，将其作为 SPA 静态资源挂载到根路径。
+    API 路由 (/api/*) 先注册先匹配，静态资源不会覆盖它们。"""
+    dist = settings.DATA_DIR.parent / "frontend" / "dist"
+    if not dist.is_dir():
+        return
+
+    assets = dist / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets)), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        target = dist / full_path
+        if full_path and target.is_file():
+            return FileResponse(str(target))
+        return FileResponse(str(dist / "index.html"))
 
 
 def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None) -> FastAPI:
@@ -83,7 +105,7 @@ def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None) -
 
     app = FastAPI(
         title="RAG AI 助手",
-        description="本地 RAG 知识库 + AI 助手（教学进行中…）",
+        description="本地 RAG 知识库 + AI 助手",
         version="0.1.0",
         lifespan=lifespan,
     )
@@ -117,26 +139,3 @@ def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None) -
 
 
 app = create_app()
-
-
-def _mount_frontend(app: FastAPI) -> None:
-    """若 frontend/dist 已构建，将其作为 SPA 静态资源挂载到根路径。
-    API 路由 (/api/*) 先注册先匹配，静态资源不会覆盖它们。"""
-    from pathlib import Path
-    from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import FileResponse
-
-    dist = Path(__file__).resolve().parent.parent.parent.parent.parent / "frontend" / "dist"
-    if not dist.is_dir():
-        return
-
-    assets = dist / "assets"
-    if assets.is_dir():
-        app.mount("/assets", StaticFiles(directory=str(assets)), name="assets")
-
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def spa_fallback(full_path: str):
-        target = dist / full_path
-        if full_path and target.is_file():
-            return FileResponse(str(target))
-        return FileResponse(str(dist / "index.html"))
