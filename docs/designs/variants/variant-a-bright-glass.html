@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>变体 A · 明亮玻璃</title>
+<style>
+  :root{
+    --bg1:#0e1420; --bg2:#101828;
+    --panel:rgba(255,255,255,.055);
+    --line:rgba(255,255,255,.10);
+    --ink:#e6ecf5; --ink-dim:#9aa7ba;
+    --accent:#22d3ee; --accent2:#60a5fa;
+    --user:#0e7490; --user2:#1d4ed8;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--ink);
+       font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;height:100vh;display:flex;overflow:hidden}
+  .glow{position:fixed;width:60vw;height:60vh;border-radius:50%;filter:blur(90px);opacity:.28;z-index:0;
+        background:radial-gradient(circle,rgba(34,211,238,.5),transparent 65%)}
+  .g1{top:-20vh;left:-10vw}.g2{bottom:-20vh;right:-10vw;background:radial-gradient(circle,rgba(96,165,250,.5),transparent 65%)}
+  aside{width:250px;z-index:1;background:var(--panel);backdrop-filter:blur(18px);border-right:1px solid var(--line);
+        padding:18px;display:flex;flex-direction:column;gap:14px}
+  .logo{font-weight:700;font-size:17px;letter-spacing:.3px}
+  .logo span{color:var(--accent)}
+  nav a{display:block;padding:9px 12px;border-radius:10px;color:var(--ink-dim);text-decoration:none;font-size:14px}
+  nav a.on{background:rgba(34,211,238,.12);color:var(--ink)}
+  .hist{margin-top:8px;color:var(--ink-dim);font-size:12px}
+  .hist div{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);margin-top:6px;font-size:13px;color:var(--ink)}
+  main{flex:1;z-index:1;display:flex;flex-direction:column}
+  .msgs{flex:1;overflow:auto;padding:26px 4vw;display:flex;flex-direction:column;gap:14px}
+  .bub{max-width:min(680px,82%);padding:12px 16px;line-height:1.7;font-size:15px;backdrop-filter:blur(14px)}
+  .user{align-self:flex-end;background:linear-gradient(135deg,var(--user),var(--user2));color:#fff;
+        border-radius:18px 18px 4px 18px;box-shadow:0 6px 24px -12px rgba(29,78,216,.7)}
+  .ai{align-self:flex-start;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);
+      border-radius:4px 18px 18px 18px}
+  .tag{display:inline-block;margin-top:8px;font-size:12px;color:#a5f3fc;background:rgba(34,211,238,.12);
+       border:1px solid rgba(34,211,238,.3);border-radius:99px;padding:2px 10px;cursor:pointer}
+  .bar{display:flex;gap:10px;padding:14px 4vw 22px}
+  .liquid{flex:1;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);
+          border:1px solid var(--line);border-radius:16px;padding:8px 14px;transition:.25s}
+  .liquid:focus-within{border-color:rgba(34,211,238,.6);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+  input{flex:1;background:none;border:0;outline:0;color:var(--ink);font-size:15px}
+  .send{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;border-radius:14px;
+        color:#04121a;font-weight:700;padding:0 20px;cursor:pointer;font-size:14px}
+  .chip{margin:6px 0 0;font-size:11px;color:var(--ink-dim);letter-spacing:.4px}
+</style>
+</head>
+<body>
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <aside>
+    <div class="logo">RAG<span>·</span>助手</div>
+    <nav><a class="on">对话</a><a>知识库</a><a>Agent</a><a>设置</a></nav>
+    <div class="hist">历史对话<div>FastAPI 的用法</div><div>Qdrant 配置</div></div>
+  </aside>
+  <main>
+    <div class="msgs">
+      <div class="bub ai">变体 A · 明亮玻璃：背景更通透，气泡高亮化，浅蓝主色调，观感清爽接近"浅色夜蓝"。</div>
+      <div class="bub user">用户消息示例：整体更明亮、层次更清晰。</div>
+      <div class="bub ai">支持引用来源标注，例如这条回答引用了 <span class="tag">[1] qdrant.md · 82%</span>。</div>
+      <div class="chip">试试把每处圆角/颜色换成你想要的感觉 —— 这只是风格之一。</div>
+    </div>
+    <div class="bar">
+      <div class="liquid"><input placeholder="输入问题…"><span class="send">发送</span></div>
+    </div>
+  </main>
+</body>
+</html>

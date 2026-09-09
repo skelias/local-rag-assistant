@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>变体 B · 现代卡片</title>
+<style>
+  :root{
+    --bg:#0b0e15; --panel:#121722; --card:#161c29; --line:rgba(255,255,255,.07);
+    --ink:#e7ecf5; --dim:#8b97ab; --accent:#818cf8; --accent2:#38bdf8;
+    --user:#4f46e5; --user2:#0ea5e9;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","Microsoft YaHei",sans-serif;
+       height:100vh;display:flex;overflow:hidden}
+  aside{width:252px;background:var(--panel);border-right:1px solid var(--line);padding:16px;
+        display:flex;flex-direction:column;gap:12px}
+  .logo{font-weight:700;font-size:16px;padding:4px 6px}
+  .logo span{color:var(--accent)}
+  nav a{display:block;padding:8px 12px;border-radius:10px;color:var(--dim);font-size:14px;text-decoration:none}
+  nav a.on{background:rgba(129,140,248,.14);color:#fff;font-weight:600}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+  .card h4{font-size:12px;color:var(--dim);margin-bottom:6px;font-weight:600}
+  .card div{font-size:13px;padding:7px 8px;border-radius:8px;background:rgba(255,255,255,.02);margin-top:6px}
+  main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .top{padding:12px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .top .dot{width:8px;height:8px;border-radius:50%;background:#22c55e}
+  .top b{font-size:14px}
+  .top span{color:var(--dim);font-size:12px;margin-left:auto}
+  .msgs{flex:1;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:12px}
+  .bub{padding:11px 15px;line-height:1.7;font-size:14.5px;max-width:min(700px,85%)}
+  .user{align-self:flex-end;background:linear-gradient(135deg,var(--user),var(--user2));color:#fff;
+        border-radius:14px 14px 4px 14px;box-shadow:0 4px 18px -8px rgba(79,70,229,.6)}
+  .ai{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px}
+  .tag{display:inline-block;margin-top:6px;font-size:12px;color:#c7d2fe;border:1px solid rgba(129,140,248,.4);
+       background:rgba(129,140,248,.1);padding:1px 9px;border-radius:6px;cursor:pointer}
+  .meta{font-size:11px;color:var(--dim);margin-top:6px}
+  .bar{padding:14px 22px 20px;display:flex;gap:10px;border-top:1px solid var(--line)}
+  input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 14px;
+        color:var(--ink);outline:none;font-size:14px}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(129,140,248,.18)}
+  .send{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;border-radius:11px;
+        padding:0 22px;color:#0b1020;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+  <aside>
+    <div class="logo">RAG <span>AI</span> 助手</div>
+    <nav><a class="on">对话</a><a>知识库</a><a>Agent</a><a>设置</a></nav>
+    <div class="card"><h4>历史对话</h4><div>FastAPI 的用法</div><div>uvicorn 部署</div><div>Qdrant RRF</div></div>
+    <div class="card"><h4>当前模型</h4><div>deepseek-v4-flash</div></div>
+  </aside>
+  <main>
+    <div class="top"><span class="dot"></span><b>工作区 · 默认知识库</b><span>命中测试 / 设置 均在对应页</span></div>
+    <div class="msgs">
+      <div class="bub ai">变体 B · 现代卡片：深色工作台感，面板化 + 顶部状态条，层次分明、信息密度高。</div>
+      <div class="bub user">用户消息：偏"生产力工具"的观感。</div>
+      <div class="bub ai">回答带来源 <span class="tag">[1] qdrant.md · 82</span> <span class="tag">[2] fastapi.md · 66</span>
+        <div class="meta">消耗 输入1280 token · 缓存命中率 87%</div></div>
+    </div>
+    <div class="bar"><input placeholder="输入问题，Enter 发送"><button class="send">发送</button></div>
+  </main>
+</body>
+</html>
