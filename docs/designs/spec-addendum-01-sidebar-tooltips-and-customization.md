@@ -26,14 +26,19 @@
 - 出现位置：对话消息行首（现有 .ava）；用户头像额外可用于顶栏/菜单（可选）
 - 约束：上传前做图片格式（png/jpg/webp）与大小（≤2MB）校验；显示为圆形/圆角裁剪
 
-### 2.3 存储方案（需拍板 A/B）
-- **A. 纯前端 localStorage**：零后端改动，最简；换浏览器/清缓存会丢；单张图片受存储限额
-- **B. 后端本地文件 + 配置**（推荐，贴合"本地数据自持/拷贝即备份"）：
-  1. 后端新增最小接口组 `/api/profile`：`POST`（multipart：kind=bg|avatar_user|avatar_ai，返回文件名）+ `GET`（返回当前配置）
-  2. 文件存 `data/avatars/` 与 `data/backgrounds/`（跟随 data/ 整体备份）
-  3. 元信息（文件名映射）写 `user_config` 键：`ui.background / ui.avatar_user / ui.avatar_ai`
-  4. FastAPI 静态托管这两个目录（现有 single-port 模式下同源提供图片 URL）
-- 结论建议 B：数据随 data/ 迁移、浏览器无关；代价 = 约半节课量的后端小改造 + 设置页两块 UI
+### 2.3 存储方案（已定：B · 后端 data/，2026-09-09 用户确认）
+后端新增最小能力（约半节课量）：
+
+- **接口契约**
+  - `GET /api/profile` → `{background, avatar_user, avatar_ai}`（null 或 URL 路径）
+  - `POST /api/profile/upload`（multipart：`kind ∈ {background, avatar_user, avatar_ai}` + `file`）
+    → 校验（png/jpg/webp，≤2MB）→ 存盘 → 返回 `{url}`（相对路径）
+  - `DELETE /api/profile/upload?kind=…`（可选，先不做也 OK）
+- **文件位置**：`data/backgrounds/<uuid>.<ext>`、`data/avatars/<uuid>.<ext>`
+- **元信息**：写 `user_config` 键 `ui.background` / `ui.avatar_user` / `ui.avatar_ai`（值=URL 路径）
+- **静态托管**：FastAPI 挂载 `/media` → `data/media`（或分两个目录各自挂载），与现有 single-port 托管并存；URL 形如 `/media/backgrounds/x.png`
+- **默认回退**：无配置时背景=预设默认（霓虹渐变）、头像=字母徽章
+- 前端 `SettingsView` 新增「界面」分组：背景预设单选 + 自定义上传预览；用户/AI 头像两个上传位；上传后即时刷新全局背景与气泡头像
 
 ### 2.4 前端改动范围（对应组件）
 - `SettingsView.jsx`：新增「界面」分组（背景预设+上传、双头像上传预览）
