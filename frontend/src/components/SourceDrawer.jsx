@@ -1,4 +1,4 @@
-import { Bookmark, X, FileText } from 'lucide-react'
+﻿import { Bookmark, X, FileText } from 'lucide-react'
 import useStore from '../store'
 import { t } from '../i18n'
 
@@ -14,7 +14,7 @@ export default function SourceDrawer() {
       {/* trigger button */}
       <button
         onClick={() => useStore.getState().toggleDrawer()}
-        className="absolute top-[76px] right-5 w-9 h-9 rounded-[10px] glass-card flex items-center justify-center cursor-pointer z-[5] transition-all hover:text-accent-violet hover:border-[rgba(167,139,250,0.25)]"
+        className="absolute top-[76px] right-5 w-9 h-9 rounded-[10px] glass-card flex items-center justify-center cursor-pointer z-[5] transition-all hover:text-accent-violet hover:border-[rgba(126,162,255,0.25)]"
         title={t('sources')}
       >
         <Bookmark size={18} />
@@ -41,7 +41,7 @@ export default function SourceDrawer() {
         {data.map((s) => (
           <div key={s.n} className="glass-card rounded-card p-3.5 flex flex-col gap-2.5 transition-all hover:bg-bg-card-hover hover:border-[rgba(255,255,255,0.12)]">
             <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-[rgba(167,139,250,0.15)] text-accent-violet flex items-center justify-center text-[11px] font-bold shrink-0">{s.n}</div>
+              <div className="w-6 h-6 rounded-full bg-[rgba(126,162,255,0.15)] text-accent-violet flex items-center justify-center text-[11px] font-bold shrink-0">{s.n}</div>
               <div className="text-[13px] font-medium text-text-p truncate">{s.file}</div>
               {s.page && <div className="text-[11px] text-text-t ml-auto">p.{s.page}</div>}
             </div>
@@ -50,7 +50,7 @@ export default function SourceDrawer() {
                 <div className="h-full rounded-full"
                      style={{
                        width: `${Math.min(s.score * 100, 100)}%`,
-                       background: 'linear-gradient(90deg, #4ecdc4, #a78bfa)',
+                       background: 'linear-gradient(90deg, #99c8ff, #7ea2ff)',
                      }} />
               </div>
               <span className="text-[11px] text-accent-cyan font-semibold tabular-nums">{s.score.toFixed(2)}</span>

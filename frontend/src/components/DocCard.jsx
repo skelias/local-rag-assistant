@@ -1,10 +1,10 @@
-import { FileText, MoreHorizontal } from 'lucide-react'
+﻿import { FileText, MoreHorizontal } from 'lucide-react'
 import { t } from '../i18n'
 
 const typeColors = {
-  '.md': { bg: 'rgba(78,205,196,0.1)', fg: '#4ecdc4' },
-  '.py': { bg: 'rgba(78,205,196,0.1)', fg: '#4ecdc4' },
-  '.txt': { bg: 'rgba(167,139,250,0.1)', fg: '#a78bfa' },
+  '.md': { bg: 'rgba(153,200,255,0.1)', fg: '#99c8ff' },
+  '.py': { bg: 'rgba(153,200,255,0.1)', fg: '#99c8ff' },
+  '.txt': { bg: 'rgba(126,162,255,0.1)', fg: '#7ea2ff' },
 }
 
 const statusMap = {

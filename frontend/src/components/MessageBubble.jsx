@@ -1,4 +1,4 @@
-import { t } from '../i18n'
+﻿import { t } from '../i18n'
 
 export default function MessageBubble({ role, content, sources, time, model, onCiteClick }) {
   const isUser = role === 'user'
@@ -9,7 +9,7 @@ export default function MessageBubble({ role, content, sources, time, model, onC
         className={`
           max-w-[76%] px-[18px] py-3.5 text-sm leading-relaxed animate-fade-up
           ${isUser
-            ? 'bg-[linear-gradient(135deg,rgba(78,205,196,0.12),rgba(78,205,196,0.04))] border border-[rgba(78,205,196,0.15)] rounded-bubble-user text-text-p'
+            ? 'bg-[linear-gradient(135deg,rgba(153,200,255,0.12),rgba(153,200,255,0.04))] border border-[rgba(153,200,255,0.15)] rounded-bubble-user text-text-p'
             : 'glass-card rounded-bubble-ai text-text-p hover:bg-bg-card-hover hover:border-[rgba(255,255,255,0.12)]'}
         `}
       >

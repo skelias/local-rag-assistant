@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { Upload, Plus, Search } from 'lucide-react'
 import DocCard from '../components/DocCard'
 import { api } from '../api/client'
@@ -74,7 +74,7 @@ export default function KnowledgeView() {
       <div className="flex items-center justify-between">
         <div className="text-lg font-semibold">{t('nav_kb')}</div>
         <button onClick={() => fileRef.current?.click()}
-          className="flex items-center gap-1.5 px-5 py-2.5 rounded-btn bg-accent-cyan text-text-inv border-none text-sm font-semibold cursor-pointer transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(78,205,196,0.25)]">
+          className="flex items-center gap-1.5 px-5 py-2.5 rounded-btn bg-accent-cyan text-text-inv border-none text-sm font-semibold cursor-pointer transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(153,200,255,0.25)]">
           <Plus size={14} strokeWidth={3} />
           {t('upload')}
         </button>
@@ -84,7 +84,7 @@ export default function KnowledgeView() {
 
       {/* upload zone */}
       <div onClick={() => fileRef.current?.click()}
-        className="border-2 border-dashed border-border-sub rounded-card py-8 px-6 text-center text-text-t transition-all cursor-pointer hover:border-border-glow hover:bg-[rgba(78,205,196,0.03)] hover:text-text-s">
+        className="border-2 border-dashed border-border-sub rounded-card py-8 px-6 text-center text-text-t transition-all cursor-pointer hover:border-border-glow hover:bg-[rgba(153,200,255,0.03)] hover:text-text-s">
         <Upload size={32} strokeWidth={1.5} className="mx-auto mb-2.5" />
         <div className="text-sm font-medium text-text-s">{t('drag_hint')}</div>
         <div className="text-xs mt-1">{t('upload_hint')}</div>
@@ -102,7 +102,7 @@ export default function KnowledgeView() {
             placeholder="输入测试查询..."
             className="ctrl flex-1" />
           <button onClick={handleHitTest}
-            className="px-4 py-2 rounded-btn bg-[rgba(78,205,196,0.12)] text-accent-cyan border border-[rgba(78,205,196,0.2)] text-sm cursor-pointer transition-all hover:bg-[rgba(78,205,196,0.2)]">
+            className="px-4 py-2 rounded-btn bg-[rgba(153,200,255,0.12)] text-accent-cyan border border-[rgba(153,200,255,0.2)] text-sm cursor-pointer transition-all hover:bg-[rgba(153,200,255,0.2)]">
             {t('hit_test')}
           </button>
         </div>

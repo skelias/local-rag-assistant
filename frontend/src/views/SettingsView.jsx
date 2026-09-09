@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { t, setLang, getLang } from '../i18n'
 import { api } from '../api/client'
 
@@ -79,7 +79,7 @@ export default function SettingsView() {
       {/* Save */}
       <div className="flex justify-end pt-2">
         <button onClick={handleSave}
-          className="px-[22px] py-2.5 rounded-btn bg-accent-cyan text-text-inv border-none text-[13px] font-semibold cursor-pointer transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(78,205,196,0.25)]">
+          className="px-[22px] py-2.5 rounded-btn bg-accent-cyan text-text-inv border-none text-[13px] font-semibold cursor-pointer transition-all hover:brightness-110 hover:shadow-[0_0_20px_rgba(153,200,255,0.25)]">
           {t('save')}
         </button>
       </div>

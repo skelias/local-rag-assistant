@@ -1,4 +1,4 @@
-import { MessageSquare, BookOpen, LayoutGrid, Settings } from 'lucide-react'
+﻿import { MessageSquare, BookOpen, LayoutGrid, Settings } from 'lucide-react'
 import useStore from '../store'
 import { t } from '../i18n'
 
@@ -27,7 +27,7 @@ export default function Sidebar() {
               relative w-11 h-11 rounded-[14px] flex items-center justify-center
               transition-all duration-200 outline-none border-none cursor-pointer
               ${active
-                ? 'bg-[rgba(78,205,196,0.12)] text-accent-cyan'
+                ? 'bg-[rgba(153,200,255,0.12)] text-accent-cyan'
                 : 'bg-transparent text-text-t hover:bg-[rgba(255,255,255,0.06)] hover:text-text-s'}
             `}
             title={t(labels[i])}
@@ -48,7 +48,7 @@ export default function Sidebar() {
           relative w-11 h-11 rounded-[14px] flex items-center justify-center
           transition-all duration-200 outline-none border-none cursor-pointer
           ${nav === 'settings'
-            ? 'bg-[rgba(78,205,196,0.12)] text-accent-cyan'
+            ? 'bg-[rgba(153,200,255,0.12)] text-accent-cyan'
             : 'bg-transparent text-text-t hover:bg-[rgba(255,255,255,0.06)] hover:text-text-s'}
         `}
         title={t('nav_settings')}

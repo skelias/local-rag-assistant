@@ -4,117 +4,128 @@
 
 :root {
   color-scheme: dark;
-  --border-glow: rgba(78,205,196,0.35);
+  --border-glow: rgba(153,200,255,0.4);
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background:
-    radial-gradient(80% 60% at 20% 10%, #1a1a24, transparent 60%),
-    radial-gradient(60% 50% at 85% 20%, #151520, transparent 50%),
-    linear-gradient(180deg, #13131a, #0a0a0f);
-  background-color: #0f0f12;
-  color: #f0f0f5;
+  background: #0f1115;
+  color: #f9fafb;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ---- glass layers ---- */
+/* ---- surfaces（DSH：近实色面板，弱玻璃） ---- */
 .glass-panel {
-  background: rgba(28,28,32,0.72);
-  backdrop-filter: blur(22px) saturate(1.2);
-  -webkit-backdrop-filter: blur(22px) saturate(1.2);
-  border: 1px solid rgba(255,255,255,0.07);
-  box-shadow: 0 24px 70px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+  background: #16181e;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 18px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
 }
 
 .glass-nav {
-  background: rgba(22,22,26,0.88);
-  backdrop-filter: blur(24px) saturate(1.3);
-  -webkit-backdrop-filter: blur(24px) saturate(1.3);
-  border: 1px solid rgba(255,255,255,0.07);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  background: #12141a;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45);
 }
 
 .glass-card {
-  background: rgba(255,255,255,0.055);
+  background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.07);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .glass-card:hover {
-  background: rgba(255,255,255,0.095);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(78,205,196,0.15);
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.14);
 }
 
 .glass-drawer {
-  background: rgba(24,24,28,0.88);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border-left: 1px solid rgba(255,255,255,0.07);
+  background: #101216;
+  border-left: 1px solid rgba(255,255,255,0.08);
 }
 
-/* ---- input glow ---- */
+/* ---- input focus（DSH：细冷蓝圈） ---- */
 .input-glow:focus-within {
-  border-color: var(--border-glow);
-  box-shadow: 0 0 0 3px rgba(78,205,196,0.08), inset 0 0 16px rgba(78,205,196,0.04);
+  border-color: rgba(153,200,255,0.45);
+  box-shadow: 0 0 0 2px rgba(153,200,255,0.12);
   background: rgba(255,255,255,0.06);
 }
 
 /* ---- scrollbar ---- */
 *::-webkit-scrollbar { width: 4px; height: 4px; }
 *::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 99px; }
+*::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 99px; }
 
-/* ---- cite tag ---- */
+/* ---- cite（DSH：链接样式而非发光药丸） ---- */
 .cite-tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border-radius: 8px;
-  background: rgba(167,139,250,0.12);
-  color: #a78bfa;
+  padding: 0 2px;
+  color: #99c8ff;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
-  border: 1px solid rgba(167,139,250,0.18);
+  transition: color 0.15s, text-decoration 0.15s;
+  background: none;
+  border: none;
 }
-.cite-tag:hover { background: rgba(167,139,250,0.22); }
+.cite-tag:hover { color: #cfe5ff; text-decoration: underline; }
 
-/* ---- status badges ---- */
-.badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+/* ---- status badges（DSH 状态色） ---- */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 7px; font-size: 11px; font-weight: 600; }
 .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
-.badge-ready { background: rgba(46,204,113,0.12); color: #2ecc71; }
-.badge-ready::before { background: #2ecc71; }
-.badge-parsed { background: rgba(244,162,97,0.12); color: #f4a261; }
-.badge-parsed::before { background: #f4a261; }
-.badge-failed { background: rgba(231,76,60,0.12); color: #e74c3c; }
-.badge-failed::before { background: #e74c3c; }
-.badge-indexing { background: rgba(78,205,196,0.12); color: #4ecdc4; }
-.badge-indexing::before { background: #4ecdc4; animation: dotPulse 1.5s infinite; }
+.badge-ready { background: rgba(125,211,168,0.12); color: #7dd3a8; }
+.badge-ready::before { background: #7dd3a8; }
+.badge-parsed { background: rgba(234,182,118,0.12); color: #eab676; }
+.badge-parsed::before { background: #eab676; }
+.badge-failed { background: rgba(242,139,130,0.12); color: #f28b82; }
+.badge-failed::before { background: #f28b82; }
+.badge-indexing { background: rgba(153,200,255,0.12); color: #99c8ff; }
+.badge-indexing::before { background: #99c8ff; animation: dotPulse 1.5s infinite; }
 
 /* ---- toggle ---- */
-.toggle { width: 40px; height: 22px; border-radius: 99px; background: rgba(255,255,255,0.1); position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
+.toggle { width: 40px; height: 22px; border-radius: 99px; background: rgba(255,255,255,0.12); position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
 .toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-.toggle.on { background: #4ecdc4; }
+.toggle.on { background: #99c8ff; }
 .toggle.on::after { transform: translateX(18px); }
 
 /* ---- form controls ---- */
 .ctrl {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
   padding: 8px 12px;
-  color: #f0f0f5;
+  color: #f9fafb;
   font-size: 13px;
   min-width: 180px;
   outline: none;
   transition: border-color 0.2s;
   font-family: inherit;
 }
-.ctrl:focus { border-color: rgba(78,205,196,0.35); }
+.ctrl:focus { border-color: rgba(153,200,255,0.5); }
+
+/* ---- 侧栏 tooltip（hover/focus 显示名字） ---- */
+.nav-tip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.97);
+  white-space: nowrap;
+  font-size: 12px;
+  color: #f9fafb;
+  background: #101318;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 5px 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.14s, transform 0.14s;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 40;
+}
+button:hover > .nav-tip,
+button:focus-visible > .nav-tip { opacity: 1; transform: translateY(-50%) scale(1); }
 
 @keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }

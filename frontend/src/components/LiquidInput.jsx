@@ -1,4 +1,4 @@
-import { Send, Square, Paperclip } from 'lucide-react'
+﻿import { Send, Square, Paperclip } from 'lucide-react'
 import { useState, useRef } from 'react'
 import { t } from '../i18n'
 
@@ -44,7 +44,7 @@ export default function LiquidInput({ onSend, running, onStop }) {
             w-10 h-10 rounded-full border-none flex items-center justify-center cursor-pointer shrink-0 transition-all
             ${running
               ? 'bg-accent-danger text-white hover:scale-105'
-              : 'bg-accent-cyan text-text-inv hover:scale-105 hover:shadow-[0_0_16px_rgba(78,205,196,0.35)]'}
+              : 'bg-accent-cyan text-text-inv hover:scale-105 hover:shadow-[0_0_16px_rgba(153,200,255,0.35)]'}
           `}
           title={running ? t('stop') : t('send')}
         >

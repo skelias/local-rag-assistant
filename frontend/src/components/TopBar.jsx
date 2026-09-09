@@ -1,4 +1,4 @@
-import { t } from '../i18n'
+﻿import { t } from '../i18n'
 
 const tabs = ['kb_all', 'kb_code', 'kb_notes']
 
@@ -22,7 +22,7 @@ export default function TopBar() {
       <div className="flex items-center gap-3">
         <span className="text-[12px] text-text-t">v0.1.0</span>
         <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-text-inv"
-             style={{ background: 'linear-gradient(135deg, #4ecdc4, #a78bfa)' }}>CA</div>
+             style={{ background: 'linear-gradient(135deg, #99c8ff, #7ea2ff)' }}>CA</div>
       </div>
     </header>
   )
