@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>样板 D · 玻璃面板 × 霓虹夜航</title>
+<style>
+  :root{
+    --bg:#07040d;
+    --neon1:#22d3ee; --neon2:#a855f7; --neon3:#f472b6;
+    --ink:#efe9ff; --dim:#9489bd;
+    --glass:rgba(16,11,28,.62);
+    --glass-strong:rgba(10,6,20,.78);
+    --line:rgba(168,85,247,.22);
+    --ok:#34d399; --warn:#fbbf24; --bad:#fb7185;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:radial-gradient(70vw 60vh at 15% -5%,rgba(34,211,238,.10),transparent 60%),
+               radial-gradient(60vw 55vh at 110% 25%,rgba(168,85,247,.14),transparent 60%),
+               radial-gradient(50vw 45vh at 50% 115%,rgba(244,114,182,.07),transparent 60%), var(--bg);
+       color:var(--ink);font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+       height:100vh;overflow:hidden;padding:14px;display:flex;gap:12px}
+  /* 左侧窄图标导航（结构沿用你的设计） */
+  nav{width:64px;flex:none;background:var(--glass-strong);backdrop-filter:blur(24px);
+      border:1px solid var(--line);border-radius:24px;display:flex;flex-direction:column;
+      align-items:center;padding:14px 0;gap:10px;box-shadow:0 24px 70px rgba(0,0,0,.55)}
+  .ic{width:40px;height:40px;border-radius:16px;display:grid;place-items:center;color:var(--dim);
+      border:1px solid transparent;cursor:pointer;position:relative}
+  .ic.on{color:#fff;background:linear-gradient(135deg,rgba(34,211,238,.16),rgba(168,85,247,.2));
+         border-color:rgba(168,85,247,.6);box-shadow:0 0 18px -4px rgba(168,85,247,.8)}
+  .ic.on::before{content:"";position:absolute;left:-14px;width:3px;height:20px;border-radius:3px;
+                 background:linear-gradient(var(--neon1),var(--neon3));box-shadow:0 0 8px var(--neon1)}
+  .ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .logo{width:40px;height:40px;border-radius:14px;margin-bottom:10px;display:grid;place-items:center;
+        background:conic-gradient(from 0deg,var(--neon1),var(--neon2),var(--neon3),var(--neon1));
+        color:#07040d;font-weight:900;box-shadow:0 0 16px -2px rgba(168,85,247,.9)}
+  /* 中央悬浮玻璃面板 */
+  main{flex:1;display:flex;flex-direction:column;background:var(--glass);
+       backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
+       border:1px solid var(--line);border-radius:28px;overflow:hidden;
+       box-shadow:0 24px 70px rgba(0,0,0,.55), inset 0 0 80px -60px rgba(168,85,247,.6)}
+  .top{height:58px;flex:none;display:flex;align-items:center;gap:8px;padding:0 18px;
+       border-bottom:1px solid var(--line)}
+  .tab{padding:7px 16px;border-radius:99px;font-size:13px;color:var(--dim);cursor:pointer;border:1px solid transparent}
+  .tab.on{color:#fff;background:linear-gradient(135deg,rgba(34,211,238,.14),rgba(168,85,247,.18));
+          border-color:rgba(168,85,247,.5);box-shadow:0 0 14px -6px rgba(168,85,247,.9)}
+  .spacer{flex:1}
+  .pill2{font-size:12px;color:#67e8f9;border:1px solid rgba(34,211,238,.5);border-radius:99px;padding:3px 10px;
+         background:rgba(34,211,238,.08);box-shadow:0 0 10px -4px rgba(34,211,238,.8)}
+  /* 消息区 */
+  .msgs{flex:1;overflow:auto;padding:20px 22px;display:flex;flex-direction:column;gap:12px}
+  .row{display:flex;gap:10px;align-items:flex-end}
+  .row.u{justify-content:flex-end}
+  .bub{max-width:78%;padding:11px 15px;line-height:1.75;font-size:14.5px;border-radius:20px 20px 4px 20px}
+  .row.u .bub{background:linear-gradient(135deg,rgba(34,211,238,.10),rgba(168,85,247,.12));
+              color:#fff;border:1px solid rgba(168,85,247,.45);
+              box-shadow:0 0 22px -8px rgba(168,85,247,.9), inset 0 0 24px -18px #22d3ee}
+  .row.ai{align-items:flex-start}
+  .row.ai .bub{border-radius:4px 20px 20px 20px;background:rgba(255,255,255,.045);
+              border:1px solid var(--line);color:var(--ink);
+              box-shadow:inset 0 0 30px -24px rgba(34,211,238,.8)}
+  .row.u .ava{order:-1}
+  .ava{width:30px;height:30px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700}
+  .row.u .ava{background:linear-gradient(135deg,var(--neon1),var(--neon2));color:#04121a}
+  .row.ai .ava{background:rgba(255,255,255,.07);color:var(--dim);border:1px solid var(--line)}
+  .cite{display:inline-flex;gap:4px;align-items:center;margin:6px 4px 0 0;padding:1px 9px;font-size:12px;
+        color:#67e8f9;border:1px solid rgba(34,211,238,.55);border-radius:99px;cursor:pointer;
+        background:rgba(34,211,238,.09);box-shadow:0 0 9px -3px rgba(34,211,238,.8)}
+  .meta{font-size:11px;color:var(--dim);margin-top:6px}
+  /* 底部输入（药丸 + 旋转渐变描边，结构沿用） */
+  .bar{flex:none;padding:14px 20px 18px;display:flex;align-items:center;gap:10px}
+  .liquid{flex:1;position:relative;border-radius:99px;padding:1.5px;
+          background:conic-gradient(from var(--a,0deg),var(--neon1),var(--neon2),var(--neon3),var(--neon1));
+          animation:spin 7s linear infinite}
+  .inner{display:flex;align-items:center;gap:8px;background:#0a0617;border-radius:99px;padding:6px 6px 6px 18px}
+  input{flex:1;background:none;border:0;outline:0;color:#fff;font-size:15px}
+  .send{width:42px;height:42px;border-radius:99px;border:0;cursor:pointer;flex:none;
+        background:linear-gradient(135deg,var(--neon1),var(--neon2));color:#04020a;font-weight:900;
+        box-shadow:0 0 18px -3px rgba(34,211,238,.9)}
+  /* 右侧来源抽屉（骨架） */
+  .drawer{position:fixed;top:14px;right:14px;bottom:14px;width:360px;background:rgba(10,6,20,.9);
+          backdrop-filter:blur(28px);border:1px solid var(--line);border-radius:24px;padding:16px;
+          box-shadow:-10px 0 40px rgba(0,0,0,.5);animation:slide .3s cubic-bezier(.16,1,.3,1)}
+  .drawer h3{font-size:14px;color:var(--ink);display:flex;justify-content:space-between;margin-bottom:12px}
+  .drow{border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:10px;
+        background:rgba(255,255,255,.03)}
+  .dtop{display:flex;gap:8px;align-items:center;font-size:13px}
+  .dtop b{font-size:12px;width:20px;height:20px;border-radius:8px;display:grid;place-items:center;flex:none;
+          background:linear-gradient(135deg,rgba(34,211,238,.2),rgba(168,85,247,.25));color:#a5f3fc;
+          border:1px solid rgba(168,85,247,.5)}
+  .dtop span{color:var(--dim);font-size:11px;margin-left:auto}
+  .score{height:5px;border-radius:99px;margin:8px 0 6px;background:linear-gradient(90deg,#fb7185,#fbbf24,#34d399);
+         width:82%}
+  .dtxt{font-size:12px;color:var(--dim);line-height:1.5}
+  @keyframes spin{to{--a:360deg}} @property --a{syntax:'<angle>';initial-value:0deg;inherits:false}
+  @keyframes slide{from{transform:translateX(100%)}to{transform:translateX(0)}}
+</style>
+</head>
+<body>
+  <!-- 左导航：结构照搬你的 64px 图标栏，皮肤换霓虹 -->
+  <nav>
+    <div class="logo">R</div>
+    <div class="ic on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 19V5l6 4 6-4v14M4 19h16"/></svg></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l2 4 4 .5-3 3 1 4.5-4-2.5-4 2.5 1-4.5-3-3L10 7z"/></svg></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg></div>
+  </nav>
+
+  <!-- 中央面板 -->
+  <main>
+    <div class="top">
+      <div class="tab on">全部知识库</div><div class="tab">代码库</div><div class="tab">笔记库</div>
+      <div class="spacer"></div>
+      <span class="pill2">deepseek-v4-flash</span>
+    </div>
+
+    <div class="msgs">
+      <div class="row ai"><div class="ava">R</div>
+        <div class="bub">样板 D：你的玻璃面板布局 + 变体 C 霓虹皮肤。结构没动，换的是光与色 —— 深夜底、青紫辉光、渐变描边。</div>
+      </div>
+      <div class="row u">
+        <div class="bub">用户消息走青色→紫的渐变玻璃气泡，带霓虹外发光。</div><div class="ava">你</div>
+      </div>
+      <div class="row ai"><div class="ava">R</div>
+        <div class="bub">引用变成发光药丸，例如这条用到了 <span class="cite">[1] fastapi-guide.md · 82%</span> 与 <span class="cite">[2] qdrant.md · 64%</span>
+        <div class="meta">输出 318 token · 输入 命中缓存 12,304 / 未命中 2,011 · 缓存命中率 86%</div></div>
+      </div>
+      <div class="row ai"><div class="ava">R</div>
+        <div class="bub">知识库文档卡片与状态徽章也用同一套霓虹语汇（青=索引中 / 绿=就绪 / 橙=待确认 / 红=失败），不用 emoji。</div>
+      </div>
+    </div>
+
+    <div class="bar">
+      <div class="liquid"><div class="inner"><input placeholder="输入问题，Enter 发送"><button class="send">➤</button></div></div>
+    </div>
+  </main>
+
+  <!-- 来源抽屉骨架（示意） -->
+  <div class="drawer">
+    <h3>来源 <span style="color:var(--dim);font-weight:400">2 条命中</span></h3>
+    <div class="drow"><div class="dtop"><b>1</b>fastapi-guide.md<span>第 1 页</span></div>
+      <div class="score"></div><div class="dtxt">FastAPI 通过类型注解自动生成 /docs 交互文档……</div></div>
+    <div class="drow"><div class="dtop"><b>2</b>qdrant.md<span>第 3 页</span></div>
+      <div class="score" style="width:56%"></div><div class="dtxt">Qdrant 本地模式支持稠密+稀疏双路与 RRF 融合……</div></div>
+  </div>
+</body>
+</html>
