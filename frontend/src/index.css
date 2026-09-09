@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --border-glow: rgba(78,205,196,0.35);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background:
+    radial-gradient(80% 60% at 20% 10%, #1a1a24, transparent 60%),
+    radial-gradient(60% 50% at 85% 20%, #151520, transparent 50%),
+    linear-gradient(180deg, #13131a, #0a0a0f);
+  background-color: #0f0f12;
+  color: #f0f0f5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- glass layers ---- */
+.glass-panel {
+  background: rgba(28,28,32,0.72);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+.glass-nav {
+  background: rgba(22,22,26,0.88);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+
+.glass-card {
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.glass-card:hover {
+  background: rgba(255,255,255,0.095);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(78,205,196,0.15);
+}
+
+.glass-drawer {
+  background: rgba(24,24,28,0.88);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-left: 1px solid rgba(255,255,255,0.07);
+}
+
+/* ---- input glow ---- */
+.input-glow:focus-within {
+  border-color: var(--border-glow);
+  box-shadow: 0 0 0 3px rgba(78,205,196,0.08), inset 0 0 16px rgba(78,205,196,0.04);
+  background: rgba(255,255,255,0.06);
+}
+
+/* ---- scrollbar ---- */
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 99px; }
+
+/* ---- cite tag ---- */
+.cite-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(167,139,250,0.12);
+  color: #a78bfa;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: 1px solid rgba(167,139,250,0.18);
+}
+.cite-tag:hover { background: rgba(167,139,250,0.22); }
+
+/* ---- status badges ---- */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+.badge-ready { background: rgba(46,204,113,0.12); color: #2ecc71; }
+.badge-ready::before { background: #2ecc71; }
+.badge-parsed { background: rgba(244,162,97,0.12); color: #f4a261; }
+.badge-parsed::before { background: #f4a261; }
+.badge-failed { background: rgba(231,76,60,0.12); color: #e74c3c; }
+.badge-failed::before { background: #e74c3c; }
+.badge-indexing { background: rgba(78,205,196,0.12); color: #4ecdc4; }
+.badge-indexing::before { background: #4ecdc4; animation: dotPulse 1.5s infinite; }
+
+/* ---- toggle ---- */
+.toggle { width: 40px; height: 22px; border-radius: 99px; background: rgba(255,255,255,0.1); position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
+.toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.25s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.toggle.on { background: #4ecdc4; }
+.toggle.on::after { transform: translateX(18px); }
+
+/* ---- form controls ---- */
+.ctrl {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 8px 12px;
+  color: #f0f0f5;
+  font-size: 13px;
+  min-width: 180px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.ctrl:focus { border-color: rgba(78,205,196,0.35); }
+
+@keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
