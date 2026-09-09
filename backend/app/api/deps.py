@@ -26,3 +26,13 @@ def get_upload_dir(request: Request):
 
 def get_chat_gateway(request: Request):
     return _need(request, "chat_gateway")
+
+
+def get_media_dir(request: Request):
+    """用户上传文件（背景/头像）的根目录。注入时用注入值，否则回落 data/media。"""
+    value = getattr(request.app.state, "media_dir", None)
+    if value is None:
+        from app.core.config import settings
+
+        return settings.DATA_DIR / "media"
+    return value

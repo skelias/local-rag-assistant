@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from app.api.routes import chat, config, knowledge
+from app.api.routes import chat, config, knowledge, profile
 from app.core.config import settings
 
 
@@ -35,7 +35,8 @@ def _mount_frontend(app: FastAPI) -> None:
         return FileResponse(str(dist / "index.html"))
 
 
-def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None) -> FastAPI:
+def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None,
+               media_dir=None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # ---- 启动：缺啥补啥（真组件） ----
@@ -115,6 +116,7 @@ def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None) -
     app.state.vector_store = vector_store
     app.state.upload_dir = upload_dir
     app.state.chat_gateway = chat_gateway
+    app.state.media_dir = media_dir
 
     app.add_middleware(
         CORSMiddleware,
@@ -126,11 +128,18 @@ def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None) -
     app.include_router(knowledge.router)
     app.include_router(chat.router)
     app.include_router(config.router)
+    app.include_router(profile.router)
 
     @app.get("/api/health")
     async def health():
         """健康检查：判断后端活着没。"""
         return {"status": "ok", "version": "0.1.0"}
+
+    # ---- /media 静态托管（背景/头像等用户上传文件） ----
+    media_root = Path(media_dir) if media_dir else settings.DATA_DIR / "media"
+    media_root.mkdir(parents=True, exist_ok=True)
+    app.state.media_dir = str(media_root)
+    app.mount("/media", StaticFiles(directory=str(media_root)), name="media")
 
     # ---- 单端口静态托管（frontend/dist 存在时挂载） ----
     _mount_frontend(app)
