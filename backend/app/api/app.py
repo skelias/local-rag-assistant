@@ -110,7 +110,33 @@ def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None) -
         """健康检查：判断后端活着没。"""
         return {"status": "ok", "version": "0.1.0"}
 
+    # ---- 单端口静态托管（frontend/dist 存在时挂载） ----
+    _mount_frontend(app)
+
     return app
 
 
 app = create_app()
+
+
+def _mount_frontend(app: FastAPI) -> None:
+    """若 frontend/dist 已构建，将其作为 SPA 静态资源挂载到根路径。
+    API 路由 (/api/*) 先注册先匹配，静态资源不会覆盖它们。"""
+    from pathlib import Path
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+
+    dist = Path(__file__).resolve().parent.parent.parent.parent.parent / "frontend" / "dist"
+    if not dist.is_dir():
+        return
+
+    assets = dist / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets)), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        target = dist / full_path
+        if full_path and target.is_file():
+            return FileResponse(str(target))
+        return FileResponse(str(dist / "index.html"))
