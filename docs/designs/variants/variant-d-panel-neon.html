@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
@@ -25,6 +25,15 @@
       align-items:center;padding:14px 0;gap:10px;box-shadow:0 24px 70px rgba(0,0,0,.55)}
   .ic{width:40px;height:40px;border-radius:16px;display:grid;place-items:center;color:var(--dim);
       border:1px solid transparent;cursor:pointer;position:relative}
+  .ic .tip{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%) scale(.96);
+           white-space:nowrap;font-size:12px;color:#fff;background:rgba(20,12,36,.95);
+           border:1px solid var(--line);border-radius:9px;padding:5px 10px;opacity:0;pointer-events:none;
+           transition:opacity .15s, transform .15s;box-shadow:0 8px 26px rgba(0,0,0,.5),
+           0 0 14px -6px rgba(168,85,247,.7);z-index:20}
+  .ic .tip::before{content:"";position:absolute;right:100%;top:50%;transform:translateY(-50%);
+                   border:5px solid transparent;border-right-color:var(--line)}
+  .ic:hover .tip{opacity:1;transform:translateY(-50%) scale(1)}
+  .ic:hover{border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.08)}
   .ic.on{color:#fff;background:linear-gradient(135deg,rgba(34,211,238,.16),rgba(168,85,247,.2));
          border-color:rgba(168,85,247,.6);box-shadow:0 0 18px -4px rgba(168,85,247,.8)}
   .ic.on::before{content:"";position:absolute;left:-14px;width:3px;height:20px;border-radius:3px;
@@ -99,10 +108,10 @@
   <!-- 左导航：结构照搬你的 64px 图标栏，皮肤换霓虹 -->
   <nav>
     <div class="logo">R</div>
-    <div class="ic on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div>
-    <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 19V5l6 4 6-4v14M4 19h16"/></svg></div>
-    <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l2 4 4 .5-3 3 1 4.5-4-2.5-4 2.5 1-4.5-3-3L10 7z"/></svg></div>
-    <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg></div>
+    <div class="ic on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg><span class="tip">对话</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 19V5l6 4 6-4v14M4 19h16"/></svg><span class="tip">知识库</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l2 4 4 .5-3 3 1 4.5-4-2.5-4 2.5 1-4.5-3-3L10 7z"/></svg><span class="tip">Agent</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg><span class="tip">设置</span></div>
   </nav>
 
   <!-- 中央面板 -->
@@ -144,3 +153,4 @@
   </div>
 </body>
 </html>
+
