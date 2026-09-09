@@ -42,3 +42,8 @@
 
 
 
+
+## 待办/阻塞
+
+- BGE-M3（1024 维）升级：国内镜像/ModelScope/官方(VPN)对大文件下载均停滞（2026-09-08 实测），暂时保留 fastembed MVP；网络好时用 scripts/download_bge_m3.py 再试，代码接口已备好。
+
