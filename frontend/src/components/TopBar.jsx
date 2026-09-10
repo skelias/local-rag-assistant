@@ -24,17 +24,17 @@ export default function TopBar() {
       <div className="flex items-center gap-1.5">
         {nav === 'kb' ? (
           // 知识库 tab 只在知识库页出现
-          KB_TABS.map((t) => (
-            <span key={t.id}
-              onClick={() => setKbId(t.id)}
+          KB_TABS.map((tab) => (
+            <span key={tab.id}
+              onClick={() => setKbId(tab.id)}
               className={`
                 px-4 py-[7px] rounded-pill text-[13px] font-medium cursor-pointer transition-all select-none
-                ${kbId === t.id
+                ${kbId === tab.id
                   ? 'bg-[rgba(255,255,255,0.1)] text-text-p'
                   : 'text-text-s hover:text-text-p hover:bg-[rgba(255,255,255,0.04)]'}
               `}
             >
-              {t(t.key)}
+              {t(tab.key)}
             </span>
           ))
         ) : (
