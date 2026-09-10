@@ -49,3 +49,10 @@ logs/
 
 # Qdrant local storage
 qdrant_storage/
+
+# 第三方 AI 技能副本（体积大、来源各异，不入库；用户级技能另行安装）
+.agents/
+.claude/
+skills-lock.json
+.pytest_cache/
+
