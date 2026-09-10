@@ -88,7 +88,7 @@ export default function SettingsView() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col gap-5 px-6 py-5">
+    <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-5 px-6 py-5">
       {/* LLM：真实可用，保存即生效（无需重启） */}
       <div className="glass-card rounded-card p-5 flex flex-col gap-4">
         <div className="text-sm font-semibold text-text-p mb-1">{t('model')}</div>

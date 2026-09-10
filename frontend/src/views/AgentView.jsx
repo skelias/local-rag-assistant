@@ -12,7 +12,7 @@ export default function AgentView() {
   ]
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-5 px-6 text-text-s">
+    <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-center gap-5 px-6 text-text-s">
       <div className="w-20 h-20 rounded-card glass-card flex items-center justify-center text-text-s">
         <LayoutGrid size={36} strokeWidth={1.2} />
       </div>

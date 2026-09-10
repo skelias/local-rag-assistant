@@ -70,7 +70,7 @@ export default function KnowledgeView() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col gap-4 px-6 py-5">
+    <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 px-6 py-5">
       {/* header */}
       <div className="flex items-center justify-between">
         <div className="text-lg font-semibold">{t('nav_kb')}</div>

@@ -54,7 +54,7 @@ export default function App() {
       {/* main panel：自定义背景图时更透，让背景透出来 */}
       <main className={`glass-panel rounded-panel flex-1 max-w-[1100px] h-[calc(100vh-40px)] flex flex-col overflow-hidden relative ${profile.background && !PRESET_BG[profile.background] ? 'faded' : ''}`}>
         <TopBar />
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           <View />
         </div>
       </main>
