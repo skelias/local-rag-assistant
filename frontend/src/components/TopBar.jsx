@@ -42,7 +42,7 @@ export default function TopBar() {
         )}
       </div>
       <div className="flex items-center gap-3">
-        <span className="text-[12px] text-text-t">v0.1.0</span>
+        <span className="text-[12px] text-text-t">v1.0.0</span>
         <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-text-inv overflow-hidden"
              style={{ background: '#99c8ff' }}>
           {avatar ? <img src={avatar} alt="" className="w-full h-full object-cover" /> : '我'}

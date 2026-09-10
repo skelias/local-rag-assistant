@@ -78,7 +78,7 @@ def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None,
     app = FastAPI(
         title="RAG AI 助手",
         description="本地 RAG 知识库 + AI 助手",
-        version="0.1.0",
+        version="1.0.0",
         lifespan=lifespan,
     )
 
@@ -105,7 +105,7 @@ def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None,
     @app.get("/api/health")
     async def health():
         """健康检查：判断后端活着没。"""
-        return {"status": "ok", "version": "0.1.0"}
+        return {"status": "ok", "version": "1.0.0"}
 
     # ---- /media 静态托管（背景/头像等用户上传文件） ----
     media_root = Path(media_dir) if media_dir else settings.DATA_DIR / "media"
