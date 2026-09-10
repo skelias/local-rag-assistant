@@ -11,11 +11,12 @@ export default function KnowledgeView() {
   const [hitQuery, setHitQuery] = useState('')
   const [hitResults, setHitResults] = useState(null)
   const fileRef = useRef(null)
+  const kbId = useStore((s) => s.kbId)
 
   const loadDocs = async () => {
     try {
       setLoading(true)
-      const list = await api.docs(1)
+      const list = await api.docs(kbId)
       setDocs(list)
     } catch {
       // backend not running — keep mock data
@@ -35,7 +36,7 @@ export default function KnowledgeView() {
     const file = e.target.files?.[0]
     if (!file) return
     try {
-      await api.upload(1, file)
+      await api.upload(kbId, file)
       await loadDocs()
     } catch (err) {
       console.error('Upload failed:', err)
@@ -44,7 +45,7 @@ export default function KnowledgeView() {
 
   const handleConfirm = async (doc) => {
     try {
-      await api.confirm(1, doc.id)
+      await api.confirm(kbId, doc.id)
       await loadDocs()
     } catch (err) {
       console.error('Confirm failed:', err)
@@ -54,7 +55,7 @@ export default function KnowledgeView() {
   const handleHitTest = async () => {
     if (!hitQuery.trim()) return
     try {
-      const result = await api.hitTest(1, hitQuery)
+      const result = await api.hitTest(kbId, hitQuery)
       setHitResults(result)
       useStore.getState().setSources(result.hits || [])
     } catch {
@@ -65,7 +66,7 @@ export default function KnowledgeView() {
 
   const handleAction = (type, doc) => {
     if (type === 'confirm') handleConfirm(doc)
-    else if (type === 'delete') api.removeDoc(1, doc.id).then(loadDocs)
+    else if (type === 'delete') api.removeDoc(kbId, doc.id).then(loadDocs)
   }
 
   return (

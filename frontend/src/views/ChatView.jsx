@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import MessageBubble from '../components/MessageBubble'
 import LiquidInput from '../components/LiquidInput'
 import SourceDrawer from '../components/SourceDrawer'
@@ -10,6 +10,7 @@ export default function ChatView() {
   const [convId, setConvId] = useState(null)
   const scrollRef = useRef(null)
   const { openDrawer, setSources } = useStore()
+  const kbId = useStore((s) => s.kbId)
   const { run, stop, running } = useChatStream()
 
   // auto-scroll
@@ -25,7 +26,7 @@ export default function ChatView() {
     let sourcesData = []
 
     run({
-      kbId: 1,
+      kbId,
       query,
       conversationId: convId,
       onSources: (sources) => {

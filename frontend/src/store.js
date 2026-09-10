@@ -5,6 +5,10 @@ const useStore = create((set) => ({
   nav: 'chat',       // chat | kb | agent | settings
   setNav: (nav) => set({ nav }),
 
+  // 当前知识库（1=默认全部 / 2=代码库 / 3=笔记库）
+  kbId: 1,
+  setKbId: (kbId) => set({ kbId }),
+
   // source drawer
   drawerOpen: false,
   toggleDrawer: () => set((s) => ({ drawerOpen: !s.drawerOpen })),
