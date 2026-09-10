@@ -21,6 +21,12 @@
 - [x] **P0-11 接真实 API + i18n** — SSE hook / REST client / 命中测试面板 / 语言切换
 - [x] **P0-12 分发** — setup.bat / start.bat / 单端口静态托管 / README 收尾
 
+## 皮肤定稿 + 个性化（第 19 课）
+
+- [x] **皮肤翻新**：定稿"仿 DeepSeek Harness 桌面"风（skin-map-dsh-final.md），tailwind/index.css 落地
+- [x] **侧边栏 tooltip**：hover/focus 显示功能名（防 z-index 遮挡）
+- [x] **背景/头像个性化**：后端 /api/profile + /media；前端 设置→界面（背景预设+上传、用户/AI 头像）全局生效
+
 ## 已提交里程碑
 
 | commit | 内容 |
@@ -34,6 +40,9 @@
 | 103d7a3 | P0-8 真实端到端 MVP（fastembed + DeepSeek） |
 | 52893be | P0-9 前端脚手架 + Glassmorphism token + 四视图 + i18n |
 | 40d7ffe | P0-11 真实 API client + SSE hook + 命中测试面板 |
+| 3edb1f3 | P0-12 单端口托管 + setup/start 脚本 + README |
+| fd163be | 后端 /api/profile + /media 静态托管 + 测试 |
+| 1e47ef6 / 9aae60e | 前端 DSH 皮肤 token + tooltip + 背景/头像个性化 |
 
 ## 待办/阻塞
 
