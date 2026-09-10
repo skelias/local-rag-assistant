@@ -36,6 +36,12 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   deleteProvider: (id) => j(`/api/llm/provider/${id}`, { method: 'DELETE' }),
+  discoverModels: (payload) =>
+    j('/api/llm/discover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
 
   // ---- 个性化（背景/头像，见 spec-addendum-01） ----
   profile: () => j('/api/profile'),

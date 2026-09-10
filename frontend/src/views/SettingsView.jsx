@@ -11,12 +11,14 @@ const BG_PRESETS = [
 
 export default function SettingsView() {
   // ---- LLM ----
-  const [providers, setProviders] = useState([])   // [{id,label,base_url,builtin,configured}]
-  const [keys, setKeys] = useState({})             // id -> api_key（留空=用 .env）
+  const [providers, setProviders] = useState([])   // [{id,label,base_url,builtin,configured,models:[]}]
+  const [keys, setKeys] = useState({})             // id -> api_key
   const [pProvider, setPProvider] = useState('')
   const [pModel, setPModel] = useState('')
   const [fProvider, setFProvider] = useState('')
   const [fModel, setFModel] = useState('')
+  const [newModel, setNewModel] = useState({})     // id -> 输入中的新模型名
+  const [discovering, setDiscovering] = useState(false)
 
   // ---- retrieval ----
   const [topK, setTopK] = useState('20')
@@ -45,22 +47,18 @@ export default function SettingsView() {
         setTopK(String(cfg['kb.1.retrieval.top_k'] ?? 20))
         setThreshold(String(cfg['kb.1.retrieval.threshold'] ?? 0))
         setRerank(!!cfg['kb.1.retrieval.rerank_enabled'])
-      } catch { /* 后端未启动时保持默认 */ }
+      } catch { /* 后端未启动 */ }
     })()
   }, [])
-
-  const handleLang = (e) => {
-    const l = e.target.value === 'English' ? 'en' : 'zh'
-    setLang(l)
-    setLangState(l)
-  }
 
   const updateProvider = (id, patch) =>
     setProviders((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
 
+  const providerModels = (id) => providers.find((p) => p.id === id)?.models || []
+
   const addCustom = () => {
     const id = `custom_${Date.now().toString(36)}`
-    setProviders((prev) => [...prev, { id, label: '自定义模型', base_url: '', builtin: false, configured: false }])
+    setProviders((prev) => [...prev, { id, label: '自定义模型', base_url: '', builtin: false, configured: false, models: [] }])
     setKeys((k) => ({ ...k, [id]: '' }))
   }
 
@@ -68,6 +66,29 @@ export default function SettingsView() {
     try { await api.deleteProvider(p.id) } catch {}
     setProviders((prev) => prev.filter((x) => x.id !== p.id))
   }
+
+  const discover = async (p) => {
+    if (!(p.base_url || '').trim()) { alert(t('need_base_url')); return }
+    setDiscovering(true)
+    try {
+      const { models } = await api.discoverModels({ base_url: p.base_url, api_key: keys[p.id] || '' })
+      updateProvider(p.id, { models: models.map((m) => m.id) })
+    } catch (e) {
+      alert(t('discover_failed') + '：' + (e.message || e))
+    } finally {
+      setDiscovering(false)
+    }
+  }
+
+  const addModel = (p, name) => {
+    const m = (name || '').trim()
+    if (!m) return
+    updateProvider(p.id, { models: [...new Set([...providerModels(p.id), m])] })
+    setNewModel((s) => ({ ...s, [p.id]: '' }))
+  }
+
+  const removeModel = (p, m) =>
+    updateProvider(p.id, { models: providerModels(p.id).filter((x) => x !== m) })
 
   const handleSave = async () => {
     try {
@@ -77,10 +98,8 @@ export default function SettingsView() {
       await api.putConfig('llm.fallback_model', fModel.trim())
       for (const p of providers) {
         await api.saveProvider({
-          id: p.id,
-          label: p.label,
-          base_url: p.base_url || '',
-          api_key: (keys[p.id] || '').trim(),
+          id: p.id, label: p.label, base_url: p.base_url || '',
+          api_key: (keys[p.id] || '').trim(), models: p.models || [],
         })
       }
       await api.putConfig('kb.1.retrieval.top_k', Number(topK) || 20)
@@ -92,8 +111,11 @@ export default function SettingsView() {
     }
   }
 
+  const handleLang = (e) => {
+    const l = e.target.value === 'English' ? 'en' : 'zh'
+    setLang(l); setLangState(l)
+  }
   const setBackground = (key) => setProfile({ ...profile, background: key })
-
   const uploadProfile = async (kind) => {
     const input = kind === 'background' ? bgRef : kind === 'avatar_user' ? userRef : aiRef
     const file = input.current?.files?.[0]
@@ -102,44 +124,47 @@ export default function SettingsView() {
       const { url } = await api.uploadProfile(kind, file)
       const field = kind === 'background' ? 'background' : kind === 'avatar_user' ? 'avatar_user' : 'avatar_ai'
       setProfile({ ...profile, [field]: url })
-    } catch (err) {
-      console.error('Upload profile failed:', err)
-    }
+    } catch (err) { console.error('Upload profile failed:', err) }
   }
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-5 px-6 py-5">
-      {/* LLM：真实可用，保存即生效 */}
+      {/* LLM */}
       <div className="glass-card rounded-card p-5 flex flex-col gap-4">
         <div className="text-sm font-semibold text-text-p mb-1">{t('model')}</div>
 
+        {/* 默认模型（主力 / 降级），模型名下拉由对应 provider 的模型列表提供 */}
         <Row label={t('provider_primary')}>
           <select className="ctrl" value={pProvider} onChange={(e) => setPProvider(e.target.value)}>
-            {providers.map((p) => (
-              <option key={p.id} value={p.id}>{p.label}{p.configured ? '' : ' · 未配 Key'}</option>
-            ))}
+            {providers.map((p) => <option key={p.id} value={p.id}>{p.label}{p.configured ? '' : ' · 未配 Key'}</option>)}
           </select>
         </Row>
         <Row label={t('model_primary')}>
-          <input className="ctrl" value={pModel} onChange={(e) => setPModel(e.target.value)} />
+          <div className="flex items-center gap-2">
+            <input className="ctrl" value={pModel} list="primary-models" onChange={(e) => setPModel(e.target.value)} />
+            <datalist id="primary-models">
+              {providerModels(pProvider).map((m) => <option key={m} value={m} />)}
+            </datalist>
+          </div>
         </Row>
         <Row label={t('provider_fallback')}>
           <select className="ctrl" value={fProvider} onChange={(e) => setFProvider(e.target.value)}>
-            {providers.map((p) => (
-              <option key={p.id} value={p.id}>{p.label}</option>
-            ))}
+            {providers.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
         </Row>
         <Row label={t('model_fallback')}>
-          <input className="ctrl" value={fModel} onChange={(e) => setFModel(e.target.value)} />
+          <input className="ctrl" value={fModel} list="fallback-models" onChange={(e) => setFModel(e.target.value)} />
+          <datalist id="fallback-models">
+            {providerModels(fProvider).map((m) => <option key={m} value={m} />)}
+          </datalist>
         </Row>
 
         <div className="h-px bg-border-sub my-1" />
 
-        {/* 模型/密钥直接编辑区：可直接填 Key、改 Base URL、添加自定义模型 */}
+        {/* Provider 卡片：名称 / Base URL / Key / 模型列表（可拉取、可手动加、可删） */}
         <div className="text-[13px] font-semibold text-text-s">{t('providers')}</div>
         {providers.map((p) => (
-          <div key={p.id} className="flex flex-col gap-1.5 py-1.5 border-b border-border-sub last:border-0">
+          <div key={p.id} className="rounded-card border border-border-sub p-3.5 flex flex-col gap-2.5">
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full shrink-0 ${keys[p.id] && keys[p.id].trim() ? 'bg-accent-success' : 'bg-text-t'}`} />
               <input className="ctrl w-[180px]" value={p.label} disabled={p.builtin}
@@ -155,6 +180,34 @@ export default function SettingsView() {
             </div>
             <input className="ctrl w-full" type="password" placeholder={t('key_optional')}
               value={keys[p.id] || ''} onChange={(e) => setKeys({ ...keys, [p.id]: e.target.value })} />
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <button onClick={() => discover(p)} disabled={discovering}
+                className="px-3 py-1.5 rounded-btn border border-border-sub text-accent-cyan text-[12px] cursor-pointer hover:border-accent-cyan transition-all">
+                {t('discover_models')}
+              </button>
+              <div className="flex items-center gap-1.5">
+                <input className="ctrl w-[140px] !py-1.5 text-[12px]" placeholder={t('add_model')}
+                  value={newModel[p.id] || ''}
+                  onChange={(e) => setNewModel((s) => ({ ...s, [p.id]: e.target.value }))}
+                  onKeyDown={(e) => e.key === 'Enter' && addModel(p, newModel[p.id])} />
+                <button onClick={() => addModel(p, newModel[p.id])}
+                  className="px-2.5 py-1.5 rounded-btn border border-border-sub text-text-s text-[12px] cursor-pointer hover:border-[rgba(255,255,255,0.2)] transition-all">
+                  {t('add')}
+                </button>
+              </div>
+            </div>
+
+            {providerModels(p.id).length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {providerModels(p.id).map((m) => (
+                  <span key={m} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-btn bg-[rgba(153,200,255,0.1)] border border-[rgba(153,200,255,0.25)] text-[12px] text-accent-cyan">
+                    {m}
+                    <button onClick={() => removeModel(p, m)} className="text-text-t hover:text-accent-danger cursor-pointer border-none bg-transparent px-0.5">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         ))}
 
@@ -184,8 +237,7 @@ export default function SettingsView() {
         <div className="text-sm font-semibold text-text-p mb-1">{t('interface')}</div>
         <Row label={t('language')}>
           <select className="ctrl" value={lang === 'en' ? 'English' : '中文'} onChange={handleLang}>
-            <option>中文</option>
-            <option>English</option>
+            <option>中文</option><option>English</option>
           </select>
         </Row>
         <div className="py-1.5">

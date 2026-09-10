@@ -6,6 +6,7 @@
   llm.<id>_base_url     = 端点（覆盖默认）
 """
 from fastapi import APIRouter, Body, Depends, HTTPException
+import httpx
 
 from app.api.deps import get_db
 from app.core.config import settings
@@ -32,13 +33,16 @@ async def _providers(cfg: ConfigRepository) -> list[dict]:
     for pid, label in BUILTIN.items():
         key = await cfg.get(f"llm.{pid}_api_key", getattr(settings, f"{pid}_api_key", ""))
         base = await cfg.get(f"llm.{pid}_base_url", _builtin_base_url(pid))
+        models = await cfg.get(f"llm.{pid}_models", []) or []
         out.append({"id": pid, "label": label, "base_url": base,
-                    "builtin": True, "configured": _usable_key(key)})
+                    "builtin": True, "configured": _usable_key(key), "models": models})
     for c in (await cfg.get("llm.custom_providers", []) or []):
-        key = await cfg.get(f"llm.{c.get('id')}_api_key", "")
-        out.append({"id": c.get("id"), "label": c.get("label", c.get("id")),
+        cid = c.get("id")
+        key = await cfg.get(f"llm.{cid}_api_key", "")
+        models = await cfg.get(f"llm.{cid}_models", []) or []
+        out.append({"id": cid, "label": c.get("label", cid),
                     "base_url": c.get("base_url"), "builtin": False,
-                    "configured": _usable_key(key)})
+                    "configured": _usable_key(key), "models": models})
     return out
 
 
@@ -74,6 +78,9 @@ async def upsert_provider(db=Depends(get_db),
         await cfg.set(f"llm.{pid}_api_key", api_key)
     if base_url:
         await cfg.set(f"llm.{pid}_base_url", base_url)
+    models = payload.get("models")
+    if isinstance(models, list):
+        await cfg.set(f"llm.{pid}_models", [str(m).strip() for m in models if str(m).strip()])
 
     if pid not in BUILTIN:
         custom = await cfg.get("llm.custom_providers", []) or []
@@ -94,4 +101,29 @@ async def delete_provider(pid: str, db=Depends(get_db)) -> dict:
     await cfg.set("llm.custom_providers", custom)
     await cfg.delete(f"llm.{pid}_api_key")
     await cfg.delete(f"llm.{pid}_base_url")
+    await cfg.delete(f"llm.{pid}_models")
     return {"ok": True}
+
+
+@router.post("/discover")
+async def discover_models(payload: dict = Body(...)) -> dict:
+    """拉取某个 OpenAI 兼容端点的模型列表（GET {base_url}/models）。
+
+    只用于"发现"，本次请求不落库、凭据不保存 —— 用户确认后才写入 provider 配置。
+    """
+    base_url = (payload.get("base_url") or "").strip()
+    api_key = (payload.get("api_key") or "").strip()
+    if not base_url:
+        raise HTTPException(400, "需要 base_url")
+
+    url = base_url.rstrip("/") + "/models"
+    headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+    try:
+        async with httpx.AsyncClient(timeout=20) as c:
+            r = await c.get(url, headers=headers)
+            r.raise_for_status()
+            data = r.json().get("data", [])
+            ids = sorted({m.get("id") for m in data if isinstance(m, dict) and m.get("id")})
+            return {"models": [{"id": i} for i in ids]}
+    except Exception as e:
+        raise HTTPException(502, f"拉取失败：{e}")
