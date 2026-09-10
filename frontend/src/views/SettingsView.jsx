@@ -10,17 +10,20 @@ const BG_PRESETS = [
 ]
 
 export default function SettingsView() {
-  const [options, setOptions] = useState(null)      // { providers, primary_*, fallback_* }
+  // ---- LLM ----
+  const [providers, setProviders] = useState([])   // [{id,label,base_url,builtin,configured}]
+  const [keys, setKeys] = useState({})             // id -> api_key（留空=用 .env）
   const [pProvider, setPProvider] = useState('')
   const [pModel, setPModel] = useState('')
   const [fProvider, setFProvider] = useState('')
   const [fModel, setFModel] = useState('')
-  const [keys, setKeys] = useState({})              // llm.<pid>_api_key 覆盖（空=用 .env）
+
+  // ---- retrieval ----
   const [topK, setTopK] = useState('20')
   const [threshold, setThreshold] = useState('0')
   const [rerank, setRerank] = useState(false)
-  const [lang, setLangState] = useState(getLang())
 
+  const [lang, setLangState] = useState(getLang())
   const profile = useStore((s) => s.profile)
   const setProfile = useStore((s) => s.setProfile)
   const bgRef = useRef(null)
@@ -31,18 +34,18 @@ export default function SettingsView() {
     ;(async () => {
       try {
         const [opts, cfg] = await Promise.all([api.llmOptions(), api.getConfig()])
-        setOptions(opts)
+        setProviders(opts.providers || [])
         setPProvider(opts.primary_provider)
         setPModel(opts.primary_model)
         setFProvider(opts.fallback_provider)
         setFModel(opts.fallback_model)
         const k = {}
-        for (const p of opts.providers) k[p.id] = cfg[`llm.${p.id}_api_key`] || ''
+        for (const p of (opts.providers || [])) k[p.id] = cfg[`llm.${p.id}_api_key`] || ''
         setKeys(k)
         setTopK(String(cfg['kb.1.retrieval.top_k'] ?? 20))
         setThreshold(String(cfg['kb.1.retrieval.threshold'] ?? 0))
         setRerank(!!cfg['kb.1.retrieval.rerank_enabled'])
-      } catch { /* backend 未启动时保持默认 */ }
+      } catch { /* 后端未启动时保持默认 */ }
     })()
   }, [])
 
@@ -52,19 +55,37 @@ export default function SettingsView() {
     setLangState(l)
   }
 
+  const updateProvider = (id, patch) =>
+    setProviders((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
+
+  const addCustom = () => {
+    const id = `custom_${Date.now().toString(36)}`
+    setProviders((prev) => [...prev, { id, label: '自定义模型', base_url: '', builtin: false, configured: false }])
+    setKeys((k) => ({ ...k, [id]: '' }))
+  }
+
+  const removeCustom = async (p) => {
+    try { await api.deleteProvider(p.id) } catch {}
+    setProviders((prev) => prev.filter((x) => x.id !== p.id))
+  }
+
   const handleSave = async () => {
-    const put = (k, v) => api.putConfig(k, v)
     try {
-      await put('llm.primary_provider', pProvider)
-      await put('llm.primary_model', pModel.trim())
-      await put('llm.fallback_provider', fProvider)
-      await put('llm.fallback_model', fModel.trim())
-      for (const [pid, val] of Object.entries(keys)) {
-        if (val && val.trim()) await put(`llm.${pid}_api_key`, val.trim())
+      await api.putConfig('llm.primary_provider', pProvider)
+      await api.putConfig('llm.primary_model', pModel.trim())
+      await api.putConfig('llm.fallback_provider', fProvider)
+      await api.putConfig('llm.fallback_model', fModel.trim())
+      for (const p of providers) {
+        await api.saveProvider({
+          id: p.id,
+          label: p.label,
+          base_url: p.base_url || '',
+          api_key: (keys[p.id] || '').trim(),
+        })
       }
-      await put('kb.1.retrieval.top_k', Number(topK) || 20)
-      await put('kb.1.retrieval.threshold', Number(threshold) || 0)
-      await put('kb.1.retrieval.rerank_enabled', rerank)
+      await api.putConfig('kb.1.retrieval.top_k', Number(topK) || 20)
+      await api.putConfig('kb.1.retrieval.threshold', Number(threshold) || 0)
+      await api.putConfig('kb.1.retrieval.rerank_enabled', rerank)
       alert(t('saved'))
     } catch {
       alert(t('save_failed'))
@@ -79,8 +100,7 @@ export default function SettingsView() {
     if (!file) return
     try {
       const { url } = await api.uploadProfile(kind, file)
-      const field = kind === 'background' ? 'background'
-        : kind === 'avatar_user' ? 'avatar_user' : 'avatar_ai'
+      const field = kind === 'background' ? 'background' : kind === 'avatar_user' ? 'avatar_user' : 'avatar_ai'
       setProfile({ ...profile, [field]: url })
     } catch (err) {
       console.error('Upload profile failed:', err)
@@ -89,12 +109,13 @@ export default function SettingsView() {
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-5 px-6 py-5">
-      {/* LLM：真实可用，保存即生效（无需重启） */}
+      {/* LLM：真实可用，保存即生效 */}
       <div className="glass-card rounded-card p-5 flex flex-col gap-4">
         <div className="text-sm font-semibold text-text-p mb-1">{t('model')}</div>
+
         <Row label={t('provider_primary')}>
           <select className="ctrl" value={pProvider} onChange={(e) => setPProvider(e.target.value)}>
-            {(options?.providers || []).map((p) => (
+            {providers.map((p) => (
               <option key={p.id} value={p.id}>{p.label}{p.configured ? '' : ' · 未配 Key'}</option>
             ))}
           </select>
@@ -104,7 +125,7 @@ export default function SettingsView() {
         </Row>
         <Row label={t('provider_fallback')}>
           <select className="ctrl" value={fProvider} onChange={(e) => setFProvider(e.target.value)}>
-            {(options?.providers || []).map((p) => (
+            {providers.map((p) => (
               <option key={p.id} value={p.id}>{p.label}</option>
             ))}
           </select>
@@ -113,21 +134,38 @@ export default function SettingsView() {
           <input className="ctrl" value={fModel} onChange={(e) => setFModel(e.target.value)} />
         </Row>
 
-        <div className="text-[12px] text-text-t -mt-1">
-          {t('key_hint')}
-        </div>
-        {(options?.providers || []).map((p) => (
-          <Row key={p.id} label={p.label}>
-            <div className="flex items-center gap-2.5">
-              <span className={`w-2 h-2 rounded-full ${p.configured ? 'bg-accent-success' : 'bg-text-t'}`} />
-              <input className="ctrl w-[240px]" type="password" placeholder={t('key_optional')}
-                value={keys[p.id] || ''} onChange={(e) => setKeys({ ...keys, [p.id]: e.target.value })} />
+        <div className="h-px bg-border-sub my-1" />
+
+        {/* 模型/密钥直接编辑区：可直接填 Key、改 Base URL、添加自定义模型 */}
+        <div className="text-[13px] font-semibold text-text-s">{t('providers')}</div>
+        {providers.map((p) => (
+          <div key={p.id} className="flex flex-col gap-1.5 py-1.5 border-b border-border-sub last:border-0">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${keys[p.id] && keys[p.id].trim() ? 'bg-accent-success' : 'bg-text-t'}`} />
+              <input className="ctrl w-[180px]" value={p.label} disabled={p.builtin}
+                onChange={(e) => updateProvider(p.id, { label: e.target.value })} />
+              <input className="ctrl flex-1" placeholder={t('base_url')} value={p.base_url || ''}
+                onChange={(e) => updateProvider(p.id, { base_url: e.target.value })} />
+              {!p.builtin && (
+                <button onClick={() => removeCustom(p)}
+                  className="px-2 py-1 rounded-btn border border-border-sub text-accent-danger text-[12px] cursor-pointer hover:border-accent-danger transition-all">
+                  {t('remove')}
+                </button>
+              )}
             </div>
-          </Row>
+            <input className="ctrl w-full" type="password" placeholder={t('key_optional')}
+              value={keys[p.id] || ''} onChange={(e) => setKeys({ ...keys, [p.id]: e.target.value })} />
+          </div>
         ))}
+
+        <button onClick={addCustom}
+          className="self-start px-4 py-2 rounded-btn border border-border-sub text-accent-cyan text-[13px] cursor-pointer hover:border-accent-cyan transition-all">
+          + {t('add_custom')}
+        </button>
+        <div className="text-[12px] text-text-t -mt-1">{t('key_hint')}</div>
       </div>
 
-      {/* Retrieval：保存到 kb.1 检索配置，命中测试与对话同源生效 */}
+      {/* Retrieval */}
       <div className="glass-card rounded-card p-5 flex flex-col gap-4">
         <div className="text-sm font-semibold text-text-p mb-1">{t('retrieval')}</div>
         <Row label={t('top_k')}>
@@ -141,17 +179,15 @@ export default function SettingsView() {
         </Row>
       </div>
 
-      {/* Interface：语言 + 背景 + 头像 */}
+      {/* Interface */}
       <div className="glass-card rounded-card p-5 flex flex-col gap-4">
         <div className="text-sm font-semibold text-text-p mb-1">{t('interface')}</div>
-
         <Row label={t('language')}>
           <select className="ctrl" value={lang === 'en' ? 'English' : '中文'} onChange={handleLang}>
             <option>中文</option>
             <option>English</option>
           </select>
         </Row>
-
         <div className="py-1.5">
           <div className="text-[13px] text-text-s mb-2">{t('background')}</div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -170,7 +206,6 @@ export default function SettingsView() {
               onChange={() => uploadProfile('background')} />
           </div>
         </div>
-
         {[['avatar_user', userRef], ['avatar_ai', aiRef]].map(([kind, ref]) => (
           <Row key={kind} label={t(kind)}>
             <div className="flex items-center gap-3">
@@ -190,7 +225,6 @@ export default function SettingsView() {
         ))}
       </div>
 
-      {/* Save */}
       <div className="flex justify-end pt-2">
         <button onClick={handleSave}
           className="px-[22px] py-2.5 rounded-btn bg-accent-cyan text-text-inv border-none text-[13px] font-semibold cursor-pointer transition-all hover:brightness-110">

@@ -29,6 +29,13 @@ export const api = {
       body: JSON.stringify({ key, value }),
     }),
   llmOptions: () => j('/api/llm/options'),
+  saveProvider: (payload) =>
+    j('/api/llm/provider', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  deleteProvider: (id) => j(`/api/llm/provider/${id}`, { method: 'DELETE' }),
 
   // ---- 个性化（背景/头像，见 spec-addendum-01） ----
   profile: () => j('/api/profile'),
