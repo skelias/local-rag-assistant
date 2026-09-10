@@ -209,8 +209,12 @@ def build_default_registry(cfg) -> ProviderRegistry:
 
 
 def build_registry_from_keys(keys: dict[str, str],
-                             base_urls: dict[str, str | None] | None = None) -> ProviderRegistry:
-    """由"keys/base_urls 字典"登记 provider（供 settings 或数据库配置两路复用）。"""
+                             base_urls: dict[str, str | None] | None = None,
+                             custom: list[dict] | None = None) -> ProviderRegistry:
+    """由"keys/base_urls 字典"登记 provider（供 settings 或数据库配置两路复用）。
+
+    custom：用户自定义的 OpenAI 兼容端点，形如 [{"id","label","base_url"}]。
+    """
     base_urls = base_urls or {}
     reg = ProviderRegistry()
     if _usable_key(keys.get("claude_api_key", "")):
@@ -225,6 +229,16 @@ def build_registry_from_keys(keys: dict[str, str],
     for name, key, base_url in compat:
         if _usable_key(key):
             reg.register(name, lambda key, base_url=base_url: OpenAICompatProvider(key, base_url))
+
+    for c in custom or []:
+        cid = c.get("id", "")
+        if not cid or cid in ("anthropic", "deepseek", "openai", "glm", "kimi"):
+            continue
+        base_url = c.get("base_url")
+        if not base_url:
+            continue
+        reg.register(cid, lambda key, base_url=base_url: OpenAICompatProvider(key, base_url))
+
     return reg
 
 
@@ -246,11 +260,19 @@ async def build_gateway_from_config(cfg_repo) -> "ChatGateway":
                               getattr(settings, f"{n}_base_url", None))
         for n in ("deepseek", "openai", "glm", "kimi")
     }
+    custom = await cfg_repo.get("llm.custom_providers", []) or []
+    for c in custom:
+        cid = c.get("id", "")
+        if not cid:
+            continue
+        keys[f"{cid}_api_key"] = await cfg_repo.get(f"llm.{cid}_api_key", "")
+        base_urls[cid] = c.get("base_url")
+
     gw_cfg = GatewayConfig(
         primary_provider=await cfg_repo.get("llm.primary_provider", settings.default_chat_provider),
         primary_model=await cfg_repo.get("llm.primary_model", settings.default_chat_model),
         fallback_provider=await cfg_repo.get("llm.fallback_provider", settings.fallback_chat_provider),
         fallback_model=await cfg_repo.get("llm.fallback_model", settings.fallback_chat_model),
     )
-    reg = build_registry_from_keys(keys, base_urls)
+    reg = build_registry_from_keys(keys, base_urls, custom)
     return ChatGateway(reg, gw_cfg, keys, base_urls)

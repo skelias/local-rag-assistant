@@ -201,6 +201,11 @@ class ConfigRepository:
         cur = await self.db.conn.execute("SELECT key,value FROM user_config")
         return {r["key"]: _loads(r["value"]) for r in await cur.fetchall()}
 
+    async def delete(self, key: str) -> None:
+        """删除一条设置（不存在则静默成功）。"""
+        await self.db.conn.execute("DELETE FROM user_config WHERE key=?", (key,))
+        await self.db.conn.commit()
+
 
 class UsageRepository:
     """用量表的"管理员"：记一次调用消耗（token + 缓存命中），算总计与命中率。"""
