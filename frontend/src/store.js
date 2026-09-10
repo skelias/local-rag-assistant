@@ -14,6 +14,10 @@ const useStore = create((set) => ({
   // active sources (for drawer)
   sources: [],
   setSources: (sources) => set({ sources }),
+
+  // 个性化：背景 / 头像（值为 preset:xxx 或 /media/... URL）
+  profile: { background: null, avatar_user: null, avatar_ai: null },
+  setProfile: (profile) => set({ profile }),
 }))
 
 export default useStore

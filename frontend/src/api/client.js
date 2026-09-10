@@ -28,4 +28,12 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, value }),
     }),
+
+  // ---- 个性化（背景/头像，见 spec-addendum-01） ----
+  profile: () => j('/api/profile'),
+  uploadProfile: (kind, file) => {
+    const f = new FormData()
+    f.append('file', file)
+    return j(`/api/profile/upload?kind=${encodeURIComponent(kind)}`, { method: 'POST', body: f })
+  },
 }

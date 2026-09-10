@@ -1,8 +1,11 @@
-﻿import { t } from '../i18n'
+import { t } from '../i18n'
+import useStore from '../store'
 
 const tabs = ['kb_all', 'kb_code', 'kb_notes']
 
 export default function TopBar() {
+  const avatar = useStore((s) => s.profile.avatar_user)
+
   return (
     <header className="h-[60px] border-b border-border-sub flex items-center justify-between px-6 shrink-0">
       <div className="flex gap-1.5">
@@ -21,8 +24,10 @@ export default function TopBar() {
       </div>
       <div className="flex items-center gap-3">
         <span className="text-[12px] text-text-t">v0.1.0</span>
-        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-text-inv"
-             style={{ background: 'linear-gradient(135deg, #99c8ff, #7ea2ff)' }}>CA</div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-text-inv overflow-hidden"
+             style={{ background: '#99c8ff' }}>
+          {avatar ? <img src={avatar} alt="" className="w-full h-full object-cover" /> : '我'}
+        </div>
       </div>
     </header>
   )
