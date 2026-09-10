@@ -158,36 +158,46 @@ export default function SettingsView() {
             {providerModels(fProvider).map((m) => <option key={m} value={m} />)}
           </datalist>
         </Row>
+        <div className="text-[12px] text-text-t -mt-1">{t('model_hint')}</div>
 
         <div className="h-px bg-border-sub my-1" />
 
-        {/* Provider 卡片：名称 / Base URL / Key / 模型列表（可拉取、可手动加、可删） */}
+        {/* Provider 卡片：名称 / Base URL / API Key / 模型列表（手填为主，拉取可选） */}
         <div className="text-[13px] font-semibold text-text-s">{t('providers')}</div>
         {providers.map((p) => (
-          <div key={p.id} className="rounded-card border border-border-sub p-3.5 flex flex-col gap-2.5">
+          <div key={p.id} className="rounded-card border border-border-sub p-3.5 flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full shrink-0 ${keys[p.id] && keys[p.id].trim() ? 'bg-accent-success' : 'bg-text-t'}`} />
-              <input className="ctrl w-[180px]" value={p.label} disabled={p.builtin}
+              <span className="text-[12px] text-text-t w-[62px] shrink-0">{t('provider_name')}</span>
+              <input className="ctrl w-[170px]" value={p.label} disabled={p.builtin}
                 onChange={(e) => updateProvider(p.id, { label: e.target.value })} />
-              <input className="ctrl flex-1" placeholder={t('base_url')} value={p.base_url || ''}
-                onChange={(e) => updateProvider(p.id, { base_url: e.target.value })} />
               {!p.builtin && (
                 <button onClick={() => removeCustom(p)}
-                  className="px-2 py-1 rounded-btn border border-border-sub text-accent-danger text-[12px] cursor-pointer hover:border-accent-danger transition-all">
+                  className="ml-auto px-2 py-1 rounded-btn border border-border-sub text-accent-danger text-[12px] cursor-pointer hover:border-accent-danger transition-all">
                   {t('remove')}
                 </button>
               )}
             </div>
-            <input className="ctrl w-full" type="password" placeholder={t('key_optional')}
-              value={keys[p.id] || ''} onChange={(e) => setKeys({ ...keys, [p.id]: e.target.value })} />
 
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-text-t w-[62px] shrink-0">{t('base_url')}</span>
+              <input className="ctrl flex-1" placeholder="https://api.example.com/v1" value={p.base_url || ''}
+                onChange={(e) => updateProvider(p.id, { base_url: e.target.value })} />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-text-t w-[62px] shrink-0">{t('api_key')}</span>
+              <input className="ctrl flex-1" type="password" placeholder={t('key_env_hint')}
+                value={keys[p.id] || ''} onChange={(e) => setKeys({ ...keys, [p.id]: e.target.value })} />
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap pt-1">
               <button onClick={() => discover(p)} disabled={discovering}
                 className="px-3 py-1.5 rounded-btn border border-border-sub text-accent-cyan text-[12px] cursor-pointer hover:border-accent-cyan transition-all">
                 {t('discover_models')}
               </button>
               <div className="flex items-center gap-1.5">
-                <input className="ctrl w-[140px] !py-1.5 text-[12px]" placeholder={t('add_model')}
+                <input className="ctrl w-[160px] !py-1.5 text-[12px]" placeholder={t('add_model')}
                   value={newModel[p.id] || ''}
                   onChange={(e) => setNewModel((s) => ({ ...s, [p.id]: e.target.value }))}
                   onKeyDown={(e) => e.key === 'Enter' && addModel(p, newModel[p.id])} />
