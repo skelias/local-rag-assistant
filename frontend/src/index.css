@@ -17,10 +17,14 @@ body {
 
 /* ---- surfaces（DSH：近实色面板，弱玻璃） ---- */
 .glass-panel {
-  background: #16181e;
+  background: rgba(22,24,30,0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 18px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
 }
+/* 自定义背景图时：面板更透，让背景透出来 */
+.glass-panel.faded { background: rgba(16,18,22,0.5); }
 
 .glass-nav {
   background: #12141a;

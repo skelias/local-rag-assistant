@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Upload, Plus, Search } from 'lucide-react'
 import DocCard from '../components/DocCard'
 import { api } from '../api/client'
@@ -30,7 +30,7 @@ export default function KnowledgeView() {
     }
   }
 
-  useEffect(() => { loadDocs() }, [])
+  useEffect(() => { loadDocs() }, [kbId])
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0]
