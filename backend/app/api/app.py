@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from app.api.routes import chat, config, knowledge, profile
+from app.api.routes import chat, config, knowledge, llm, profile
 from app.core.config import settings
 
 
@@ -64,37 +64,8 @@ def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None,
         if app.state.upload_dir is None:
             app.state.upload_dir = settings.UPLOAD_DIR
 
-        if app.state.chat_gateway is None:
-            from app.core.llm_gateway import (
-                ChatGateway,
-                GatewayConfig,
-                build_default_registry,
-            )
-
-            reg = build_default_registry(settings)
-            keys = {
-                "claude_api_key": settings.claude_api_key,
-                "deepseek_api_key": settings.deepseek_api_key,
-                "openai_api_key": settings.openai_api_key,
-                "glm_api_key": settings.glm_api_key,
-                "kimi_api_key": settings.kimi_api_key,
-            }
-            base_urls = {
-                "deepseek": settings.deepseek_base_url,
-                "openai": settings.openai_base_url,
-                "glm": settings.glm_base_url,
-                "kimi": settings.kimi_base_url,
-            }
-            app.state.chat_gateway = ChatGateway(
-                reg,
-                GatewayConfig(
-                    primary_provider=settings.default_chat_provider,
-                    primary_model=settings.default_chat_model,
-                    fallback_provider=settings.fallback_chat_provider,
-                    fallback_model=settings.fallback_chat_model,
-                ),
-                keys, base_urls,
-            )
+        # 注意：chat_gateway 不做静态单例 —— 每次请求由 deps 按数据库配置动态构建，
+        # 这样设置页改"模型/Provider/Key"无需重启即生效（测试仍可注入静态假网关）。
 
         yield
 
@@ -129,6 +100,7 @@ def create_app(db=None, vector_store=None, upload_dir=None, chat_gateway=None,
     app.include_router(chat.router)
     app.include_router(config.router)
     app.include_router(profile.router)
+    app.include_router(llm.router)
 
     @app.get("/api/health")
     async def health():

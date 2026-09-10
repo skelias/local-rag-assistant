@@ -201,19 +201,56 @@ def build_default_registry(cfg) -> ProviderRegistry:
     """根据配置(哪些 Key 填了)登记 provider。
     约定：provider 名字 = 读 key/base_url 的后缀，
     例如名字 "glm" → cfg.glm_api_key / cfg.glm_base_url。"""
-    reg = ProviderRegistry()
+    keys = {f"{n}_api_key": getattr(cfg, f"{n}_api_key", "")
+            for n in ("claude", "deepseek", "openai", "glm", "kimi")}
+    base_urls = {n: getattr(cfg, f"{n}_base_url", None)
+                 for n in ("deepseek", "openai", "glm", "kimi")}
+    return build_registry_from_keys(keys, base_urls)
 
-    if _usable_key(cfg.claude_api_key):
+
+def build_registry_from_keys(keys: dict[str, str],
+                             base_urls: dict[str, str | None] | None = None) -> ProviderRegistry:
+    """由"keys/base_urls 字典"登记 provider（供 settings 或数据库配置两路复用）。"""
+    base_urls = base_urls or {}
+    reg = ProviderRegistry()
+    if _usable_key(keys.get("claude_api_key", "")):
         reg.register("anthropic", lambda key, base_url=None: AnthropicProvider(key))
 
     compat = [
-        ("deepseek", cfg.deepseek_api_key, cfg.deepseek_base_url),
-        ("openai", cfg.openai_api_key, cfg.openai_base_url),
-        ("glm", cfg.glm_api_key, cfg.glm_base_url),
-        ("kimi", cfg.kimi_api_key, cfg.kimi_base_url),
+        ("deepseek", keys.get("deepseek_api_key", ""), base_urls.get("deepseek")),
+        ("openai", keys.get("openai_api_key", ""), base_urls.get("openai")),
+        ("glm", keys.get("glm_api_key", ""), base_urls.get("glm")),
+        ("kimi", keys.get("kimi_api_key", ""), base_urls.get("kimi")),
     ]
     for name, key, base_url in compat:
-        if _usable_key(key):  # 只登记"填了真 Key"的厂商
+        if _usable_key(key):
             reg.register(name, lambda key, base_url=base_url: OpenAICompatProvider(key, base_url))
-
     return reg
+
+
+async def build_gateway_from_config(cfg_repo) -> "ChatGateway":
+    """每次请求动态构建网关：user_config（数据库设置页）覆盖 .env 默认。
+
+    这样设置页改"模型/Provider/Key"后无需重启即生效。
+    cfg_repo 需有 async get(key, default)。
+    """
+    from app.core.config import settings
+
+    keys = {
+        f"{n}_api_key": await cfg_repo.get(f"llm.{n}_api_key",
+                                           getattr(settings, f"{n}_api_key", ""))
+        for n in ("claude", "deepseek", "openai", "glm", "kimi")
+    }
+    base_urls = {
+        n: await cfg_repo.get(f"llm.{n}_base_url",
+                              getattr(settings, f"{n}_base_url", None))
+        for n in ("deepseek", "openai", "glm", "kimi")
+    }
+    gw_cfg = GatewayConfig(
+        primary_provider=await cfg_repo.get("llm.primary_provider", settings.default_chat_provider),
+        primary_model=await cfg_repo.get("llm.primary_model", settings.default_chat_model),
+        fallback_provider=await cfg_repo.get("llm.fallback_provider", settings.fallback_chat_provider),
+        fallback_model=await cfg_repo.get("llm.fallback_model", settings.fallback_chat_model),
+    )
+    reg = build_registry_from_keys(keys, base_urls)
+    return ChatGateway(reg, gw_cfg, keys, base_urls)

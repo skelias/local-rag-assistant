@@ -24,8 +24,16 @@ def get_upload_dir(request: Request):
     return _need(request, "upload_dir")
 
 
-def get_chat_gateway(request: Request):
-    return _need(request, "chat_gateway")
+async def get_chat_gateway(request: Request):
+    """返回聊天网关：测试注入静态假网关；生产每次请求按数据库配置动态构建（改设置即时生效）。"""
+    static = getattr(request.app.state, "chat_gateway", None)
+    if static is not None:
+        return static
+
+    from app.core.llm_gateway import build_gateway_from_config
+    from app.services.repositories import ConfigRepository
+
+    return await build_gateway_from_config(ConfigRepository(_need(request, "db")))
 
 
 def get_media_dir(request: Request):
