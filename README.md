@@ -86,25 +86,10 @@ start.bat     # 前端没构建过会自动构建，然后打开 http://127.0.0.
 - **引用结构化**：`sources` 里带 file / page / score / chunk，前端才能做出"点开看原文片段"
 - **用量只统计 token 和缓存命中率**，不折算成钱 —— 我更关心"这段提示词有没有被缓存复用"
 
-## 数据都在哪
 
-全部收在 `data/` 一个目录里：
-
-```
-data/
-  rag.db       # 文档、分块、会话、设置、用量（SQLite）
-  qdrant/      # 向量索引
-  uploads/     # 你上传的原始文件
-  media/       # 背景图和头像
-```
-
-**备份或换电脑 = 直接复制 `data/` 整个目录。**
-
-`.env` 和 `data/` 都不会进 git。
 
 ## 已知的限制
 
-不藏着，这些确实还没做：
 
 - **Agent 页面是占位**，工具调用、多步推理还没实现（下一阶段的主要工作）
 - **只认文本类文档**：PDF / DOCX 会明确报"解析器未安装"，扫描件 OCR 也没做
@@ -131,8 +116,7 @@ data/
 **端口 8000 被占用了？**
 改 `.env` 里的 `PORT`，或者改 `start.bat` 启动命令里的端口号。
 
-**为什么不用 LangChain 那一整套？**
-开始是打算用的，写着写着发现检索和生成这段自己写更清楚：参数在哪、每一步做了什么、出错怎么排查，都在眼皮底下。依赖少，装起来也快。
+
 
 ## 技术栈
 
@@ -167,12 +151,12 @@ backend/app/services/   repositories · rag_engine · doc_pipeline
 backend/app/api/        app · deps · routes/{chat,knowledge,config,profile,llm}
 frontend/src/           components · views · api · hooks
 docs/plans/             实施计划   docs/research/  对标调研
-docs/designs/           设计规格与界面预览   docs/learning/  19 课学习笔记
+docs/designs/           设计规格与界面预览   docs/learning
 ```
 
 ## 致谢
 
-设计阶段对标过几个开源项目（AnythingLLM、Open WebUI、RAGFlow、kotaemon、Khoj、MaxKB、FastGPT），学的是产品思路 —— 引用体验、检索调试、入库前预览这些做法。**没有复制它们的代码**，调研记录在 `docs/research/`。
+设计阶段对标过几个开源项目（AnythingLLM、Open WebUI、RAGFlow、kotaemon、Khoj、MaxKB、FastGPT）。
 
 ## License
 
